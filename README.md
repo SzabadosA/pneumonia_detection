@@ -34,6 +34,9 @@ conda install conda-forge::matplotlib
 ```
 project/
 ├── notebooks/             # For interactive exploration and demonstration
+│   ├── checkpoints
+│   ├── tb_logs
+│   │   ├── pneumonia_classifier
 │   ├── data_preprocessing.ipynb
 │   ├── model_training.ipynb
 │   ├── gradcam_visualization.ipynb
@@ -50,8 +53,6 @@ project/
 ├── checkpoints/           # Model checkpoints
 │   ├── resnet50_best.ckpt
 │   ├── custom_model_best.ckpt
-├── logs/                  # Logs for training metrics
-│   └── tensorboard_logs/
 ├── results/               # Results and visualizations
 │   ├── gradcam/
 │   ├── metrics_summary.csv

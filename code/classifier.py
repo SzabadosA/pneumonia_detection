@@ -4,11 +4,17 @@ import pytorch_lightning as pl
 from torchmetrics.classification import Accuracy, Precision, Recall, F1Score
 from torchvision import models
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.loggers import TensorBoardLogger
+from code.dataloader import PneumoniaDataset
+from code.custom_checkpoint import CustomModelCheckpoint
+from code.project_globals import TEST_DIR, TRAIN_DIR, VAL_DIR
 
 class PneumoniaClassifier(pl.LightningModule):
-    def __init__(self, config):
+    def __init__(self, config, transform):
         super().__init__()
         self.config = config
+        self.transform = transform
         self.save_hyperparameters(ignore=['backbone'])
         self.accuracy = Accuracy(task='binary')
         self.precision = Precision(task='binary')
@@ -26,6 +32,42 @@ class PneumoniaClassifier(pl.LightningModule):
 
         self.dropout = nn.Dropout(p=config.dropout)
         self.classifier = nn.Linear(num_filters, 2)
+
+        self.train_loader, self.val_loader, self.test_loader = self.create_dataloaders()
+        self.checkpoint_callback = CustomModelCheckpoint(
+            monitor='val_loss',
+            dirpath='../checkpoints',
+            filename=self.config.model_name + '-{epoch:02d}-{val_loss:.2f}_v' + self.config.version,
+            save_top_k=1,
+            mode='min'
+        )
+        self.early_stopping_callback = EarlyStopping(
+            monitor='val_loss',
+            patience=3,
+            verbose=True,
+            mode='min'
+        )
+        self.trainer = pl.Trainer(
+            max_epochs=self.config.max_epochs,
+            accelerator="gpu",
+            devices=1,
+            logger=TensorBoardLogger("tb_logs", name=self.config.model_name),
+            log_every_n_steps=1,
+            callbacks=[self.checkpoint_callback, self.early_stopping_callback],
+            precision='16-mixed',
+            accumulate_grad_batches=2
+        )
+
+    def create_dataloaders(self):
+        train = PneumoniaDataset(root_dir=TRAIN_DIR.as_posix(), transform=self.transform)
+        test = PneumoniaDataset(root_dir=TEST_DIR.as_posix(), transform=self.transform)
+        val = PneumoniaDataset(root_dir=VAL_DIR.as_posix(), transform=self.transform)
+
+        train_loader = torch.utils.data.DataLoader(dataset=train, batch_size=self.config.batch_size, shuffle=True, num_workers=self.config.num_workers, persistent_workers=True)
+        test_loader = torch.utils.data.DataLoader(dataset=test, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
+        val_loader = torch.utils.data.DataLoader(dataset=val, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
+
+        return train_loader, val_loader, test_loader
 
     def forward(self, x):
         self.feature_extractor.eval()
@@ -132,8 +174,29 @@ class PneumoniaClassifier(pl.LightningModule):
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
+    def train_model(self):
+        self.trainer.fit(self, self.train_loader, self.val_loader)
+
+    def test_model(self, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path, weights_only=True)
+        self.trainer.test(self, self.test_loader)
+        metadata = checkpoint.get("metadata", {})
+        return metadata
+
 class Config:
-    def __init__(self, backbone_name, transfer_learning, learning_rate, batch_size, max_epochs, weight_decay, dropout):
+    def __init__(
+            self,
+            backbone_name,
+            transfer_learning,
+            learning_rate,
+            batch_size,
+            max_epochs,
+            weight_decay,
+            dropout,
+            num_workers,
+            model_name,
+            version
+        ):
         self.backbone_name = backbone_name
         self.transfer_learning = transfer_learning
         self.learning_rate = learning_rate
@@ -141,3 +204,6 @@ class Config:
         self.max_epochs = max_epochs
         self.weight_decay = weight_decay
         self.dropout = dropout
+        self.num_workers = num_workers
+        self.model_name = model_name
+        self.version = version

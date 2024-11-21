@@ -37,7 +37,7 @@ class PneumoniaClassifier(pl.LightningModule):
         self.checkpoint_callback = CustomModelCheckpoint(
             monitor='val_loss',
             dirpath='../checkpoints',
-            filename=self.config.model_name + '-{epoch:02d}-{val_loss:.2f}_v' + self.config.version,
+            filename=self.config.model_name,
             save_top_k=1,
             mode='min'
         )
@@ -86,11 +86,11 @@ class PneumoniaClassifier(pl.LightningModule):
         self.precision.update(preds, label)
         self.recall.update(preds, label)
         self.f1.update(preds, label)
-        self.log('train_loss', loss)
-        self.log('train_acc_step', self.accuracy.compute(), prog_bar=True)
-        self.log('train_precision_step', self.precision.compute(), prog_bar=True)
-        self.log('train_recall_step', self.recall.compute(), prog_bar=True)
-        self.log('train_f1_step', self.f1.compute(), prog_bar=True)
+        #self.log('train_loss', loss)
+        #self.log('train_acc_step', self.accuracy.compute(), prog_bar=True)
+        #self.log('train_precision_step', self.precision.compute(), prog_bar=True)
+        #self.log('train_recall_step', self.recall.compute(), prog_bar=True)
+        #self.log('train_f1_step', self.f1.compute(), prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -104,10 +104,10 @@ class PneumoniaClassifier(pl.LightningModule):
         self.recall.update(val_preds, val_label)
         self.f1.update(val_preds, val_label)
         self.log('val_loss', val_loss)
-        self.log('val_acc_step', self.accuracy.compute(), prog_bar=True)
-        self.log('val_precision_step', self.precision.compute(), prog_bar=True)
-        self.log('val_recall_step', self.recall.compute(), prog_bar=True)
-        self.log('val_f1_step', self.f1.compute(), prog_bar=True)
+        #self.log('val_acc_step', self.accuracy.compute(), prog_bar=True)
+        #self.log('val_precision_step', self.precision.compute(), prog_bar=True)
+        #self.log('val_recall_step', self.recall.compute(), prog_bar=True)
+        #self.log('val_f1_step', self.f1.compute(), prog_bar=True)
         return val_loss
 
     def on_train_epoch_end(self):
@@ -123,6 +123,7 @@ class PneumoniaClassifier(pl.LightningModule):
         self.precision.reset()
         self.recall.reset()
         self.f1.reset()
+
 
     def test_step(self, batch, batch_idx):
         test_data, test_label = batch
@@ -170,7 +171,15 @@ class PneumoniaClassifier(pl.LightningModule):
         self.f1.reset()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.config.learning_rate, weight_decay=self.config.weight_decay)
+        if self.config.optimizer_name.lower() == 'adam':
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.config.learning_rate,
+                                         weight_decay=self.config.weight_decay)
+        elif self.config.optimizer_name.lower() == 'sgd':
+            optimizer = torch.optim.SGD(self.parameters(), lr=self.config.learning_rate,
+                                        weight_decay=self.config.weight_decay, momentum=0.9)
+        else:
+            raise ValueError(f"Unsupported optimizer: {self.config.optimizer_name}")
+
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
@@ -195,7 +204,8 @@ class Config:
             dropout,
             num_workers,
             model_name,
-            version
+            version,
+            optimizer_name
         ):
         self.backbone_name = backbone_name
         self.transfer_learning = transfer_learning
@@ -207,3 +217,4 @@ class Config:
         self.num_workers = num_workers
         self.model_name = model_name
         self.version = version
+        self.optimizer_name = optimizer_name

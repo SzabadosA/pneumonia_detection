@@ -57,6 +57,20 @@ class PneumoniaClassifier(pl.LightningModule):
             precision='16-mixed',
             accumulate_grad_batches=2
         )
+    def save_checkpoint(self, checkpoint_path):
+        checkpoint = {
+            'state_dict': self.state_dict(),
+            'config': self.config
+        }
+        torch.save(checkpoint, checkpoint_path)
+
+    @classmethod
+    def load_from_checkpoint(cls, checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        config = checkpoint['config']
+        model = cls(config)
+        model.load_state_dict(checkpoint['state_dict'])
+        return model
 
     def create_dataloaders(self):
         train = PneumoniaDataset(root_dir=TRAIN_DIR.as_posix(), transform=self.transform)

@@ -9,12 +9,13 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from code.dataloader import PneumoniaDataset
 from code.custom_checkpoint import CustomModelCheckpoint
 from code.project_globals import TEST_DIR, TRAIN_DIR, VAL_DIR
+from torchvision import transforms
 
 class PneumoniaClassifier(pl.LightningModule):
-    def __init__(self, config, transform):
+    def __init__(self, config):
         super().__init__()
         self.config = config
-        self.transform = transform
+        #self.transform = transform
         self.save_hyperparameters(ignore=['backbone'])
         self.accuracy = Accuracy(task='binary')
         self.precision = Precision(task='binary')
@@ -72,10 +73,30 @@ class PneumoniaClassifier(pl.LightningModule):
         model.load_state_dict(checkpoint['state_dict'])
         return model
 
+
+
     def create_dataloaders(self):
-        train = PneumoniaDataset(root_dir=TRAIN_DIR.as_posix(), transform=self.transform)
-        test = PneumoniaDataset(root_dir=TEST_DIR.as_posix(), transform=self.transform)
-        val = PneumoniaDataset(root_dir=VAL_DIR.as_posix(), transform=self.transform)
+        IMAGE_SIZE = 224
+        train_transform = transforms.Compose([
+            transforms.Resize(IMAGE_SIZE),  # Resize to 224x224
+            transforms.RandomResizedCrop(IMAGE_SIZE),  # Random crop with rescaling
+            transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip the image horizontally
+            transforms.ToTensor(),  # Convert to PyTorch Tensor
+            transforms.Normalize([0.485, 0.456, 0.406],  # Normalize (ImageNet mean)
+                                 [0.229, 0.224, 0.225])  # Normalize (ImageNet std)
+        ])
+
+        # Validation/Test transform
+        val_transform = transforms.Compose([
+            transforms.Resize(IMAGE_SIZE),  # Resize to 224x224
+            transforms.CenterCrop(IMAGE_SIZE),  # Crop the center of the image
+            transforms.ToTensor(),  # Convert to PyTorch Tensor
+            transforms.Normalize([0.485, 0.456, 0.406],  # Normalize (ImageNet mean)
+                                 [0.229, 0.224, 0.225])  # Normalize (ImageNet std)
+        ])
+        train = PneumoniaDataset(root_dir=TRAIN_DIR.as_posix(), transform=train_transform)
+        val = PneumoniaDataset(root_dir=VAL_DIR.as_posix(), transform=val_transform)
+        test = PneumoniaDataset(root_dir=TEST_DIR.as_posix(), transform=val_transform)
 
         train_loader = torch.utils.data.DataLoader(dataset=train, batch_size=self.config.batch_size, shuffle=True, num_workers=self.config.num_workers, persistent_workers=True)
         test_loader = torch.utils.data.DataLoader(dataset=test, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
@@ -92,19 +113,25 @@ class PneumoniaClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         data, label = batch
+        label = label
         output = self.forward(data)
         loss = nn.CrossEntropyLoss()(output, label)
 
         preds = torch.argmax(output, dim=1)
+
+        # Update metrics
         self.accuracy.update(preds, label)
         self.precision.update(preds, label)
         self.recall.update(preds, label)
         self.f1.update(preds, label)
-        #self.log('train_loss', loss)
-        #self.log('train_acc_step', self.accuracy.compute(), prog_bar=True)
-        #self.log('train_precision_step', self.precision.compute(), prog_bar=True)
-        #self.log('train_recall_step', self.recall.compute(), prog_bar=True)
-        #self.log('train_f1_step', self.f1.compute(), prog_bar=True)
+
+        # Log metrics for the step
+        self.log('train_loss_step', loss, prog_bar=True, on_step=True)
+        self.log('train_acc_step', self.accuracy.compute(), prog_bar=True, on_step=True)
+        self.log('train_precision_step', self.precision.compute(), prog_bar=True, on_step=True)
+        self.log('train_recall_step', self.recall.compute(), prog_bar=True, on_step=True)
+        self.log('train_f1_step', self.f1.compute(), prog_bar=True, on_step=True)
+
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -125,19 +152,7 @@ class PneumoniaClassifier(pl.LightningModule):
         return val_loss
 
     def on_train_epoch_end(self):
-        acc = self.accuracy.compute()
-        precision = self.precision.compute()
-        recall = self.recall.compute()
-        f1 = self.f1.compute()
-        self.log('train_acc_epoch', acc, prog_bar=True)
-        self.log('train_precision_epoch', precision, prog_bar=True)
-        self.log('train_recall_epoch', recall, prog_bar=True)
-        self.log('train_f1_epoch', f1, prog_bar=True)
-        self.accuracy.reset()
-        self.precision.reset()
-        self.recall.reset()
-        self.f1.reset()
-
+        pass
 
     def test_step(self, batch, batch_idx):
         test_data, test_label = batch
@@ -175,10 +190,14 @@ class PneumoniaClassifier(pl.LightningModule):
         precision = self.precision.compute()
         recall = self.recall.compute()
         f1 = self.f1.compute()
-        self.log('val_acc_epoch', acc, prog_bar=True)
-        self.log('val_precision_epoch', precision, prog_bar=True)
-        self.log('val_recall_epoch', recall, prog_bar=True)
-        self.log('val_f1_epoch', f1, prog_bar=True)
+
+        # Log validation epoch metrics
+        self.log('val_acc_epoch', acc, prog_bar=True, on_epoch=True)
+        self.log('val_precision_epoch', precision, prog_bar=True, on_epoch=True)
+        self.log('val_recall_epoch', recall, prog_bar=True, on_epoch=True)
+        self.log('val_f1_epoch', f1, prog_bar=True, on_epoch=True)
+
+        # Reset metrics
         self.accuracy.reset()
         self.precision.reset()
         self.recall.reset()

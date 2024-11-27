@@ -28,6 +28,7 @@ conda install conda-forge::grad-cam
 conda install conda-forge::albumentations
 conda install conda-forge::opencv
 conda install conda-forge::matplotlib
+conda install conda-forge::torchcam
 ```
 
 # Project Structure

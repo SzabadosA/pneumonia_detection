@@ -76,7 +76,7 @@ class PneumoniaClassifier(pl.LightningModule):
 
 
     def create_dataloaders(self):
-        IMAGE_SIZE = 224
+        IMAGE_SIZE = 1000
         train_transform = transforms.Compose([
             transforms.Resize(IMAGE_SIZE),  # Resize to 224x224
             transforms.RandomResizedCrop(IMAGE_SIZE),  # Random crop with rescaling
@@ -105,9 +105,8 @@ class PneumoniaClassifier(pl.LightningModule):
         return train_loader, val_loader, test_loader
 
     def forward(self, x):
-        self.feature_extractor.eval()
-        with torch.no_grad():
-            representations = self.feature_extractor(x).flatten(1)
+        # Do not set the feature extractor to eval here, as Grad-CAM requires gradients.
+        representations = self.feature_extractor(x).flatten(1)
         representations = self.dropout(representations)
         return self.classifier(representations)
 

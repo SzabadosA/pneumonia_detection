@@ -6,22 +6,33 @@ from torchvision import models
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
+from torchvision.datasets import ImageFolder
 from code.dataloader import PneumoniaDataset
 from code.custom_checkpoint import CustomModelCheckpoint
 from code.project_globals import TEST_DIR, TRAIN_DIR, VAL_DIR
 from torchvision import transforms
+import os
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+from torchvision import transforms
+from collections import Counter
 
 class PneumoniaClassifier(pl.LightningModule):
+
     def __init__(self, config):
         super().__init__()
         self.config = config
-        #self.transform = transform
         self.save_hyperparameters(ignore=['backbone'])
+
+        # Metrics
         self.accuracy = Accuracy(task='binary')
         self.precision = Precision(task='binary')
         self.recall = Recall(task='binary')
         self.f1 = F1Score(task='binary')
 
+        # Model backbone
         backbone = getattr(models, config.backbone_name)(weights='DEFAULT')
         num_filters = backbone.fc.in_features
         layers = list(backbone.children())[:-1]
@@ -34,7 +45,14 @@ class PneumoniaClassifier(pl.LightningModule):
         self.dropout = nn.Dropout(p=config.dropout)
         self.classifier = nn.Linear(num_filters, 2)
 
+        # Create dataloaders and compute class weights
         self.train_loader, self.val_loader, self.test_loader = self.create_dataloaders()
+        if config.use_class_weights:
+            # Precompute class weights and move to device
+            self.class_weights = self.compute_class_weights().to(self.device)
+        else:
+            self.class_weights = None
+
         self.checkpoint_callback = CustomModelCheckpoint(
             monitor='val_loss',
             dirpath='../checkpoints',
@@ -53,15 +71,32 @@ class PneumoniaClassifier(pl.LightningModule):
             accelerator="gpu",
             devices=1,
             logger=TensorBoardLogger("tb_logs", name=self.config.model_name),
-            log_every_n_steps=1,
+            log_every_n_steps=10,
             callbacks=[self.checkpoint_callback, self.early_stopping_callback],
             precision='16-mixed',
             accumulate_grad_batches=2
         )
+
+    def compute_class_weights(self):
+        """
+        Compute class weights based on the number of samples in each class.
+        """
+        class_counts = Counter(self.train_loader.dataset.targets)
+        total_samples = sum(class_counts.values())
+        class_weights = [total_samples / class_counts[i] for i in range(len(class_counts))]
+
+        # Move class weights to the appropriate device
+        return torch.tensor(class_weights, dtype=torch.float32).to(self.device)
+
     def save_checkpoint(self, checkpoint_path):
         checkpoint = {
-            'state_dict': self.state_dict(),
-            'config': self.config
+            "state_dict": self.state_dict(),
+            "config": self.config,
+            "metadata": {
+                "epoch": current_epoch,
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+            },
         }
         torch.save(checkpoint, checkpoint_path)
 
@@ -76,31 +111,36 @@ class PneumoniaClassifier(pl.LightningModule):
 
 
     def create_dataloaders(self):
-        IMAGE_SIZE = 1000
         train_transform = transforms.Compose([
-            transforms.Resize(IMAGE_SIZE),  # Resize to 224x224
-            transforms.RandomResizedCrop(IMAGE_SIZE),  # Random crop with rescaling
-            transforms.RandomHorizontalFlip(p=0.5),  # Randomly flip the image horizontally
-            transforms.ToTensor(),  # Convert to PyTorch Tensor
-            transforms.Normalize([0.485, 0.456, 0.406],  # Normalize (ImageNet mean)
-                                 [0.229, 0.224, 0.225])  # Normalize (ImageNet std)
+            transforms.Resize(self.config.image_res),
+            transforms.RandomResizedCrop(self.config.image_res),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        val_test_transform = transforms.Compose([
+            transforms.Resize(self.config.image_res),
+            transforms.CenterCrop(self.config.image_res),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
-        # Validation/Test transform
-        val_transform = transforms.Compose([
-            transforms.Resize(IMAGE_SIZE),  # Resize to 224x224
-            transforms.CenterCrop(IMAGE_SIZE),  # Crop the center of the image
-            transforms.ToTensor(),  # Convert to PyTorch Tensor
-            transforms.Normalize([0.485, 0.456, 0.406],  # Normalize (ImageNet mean)
-                                 [0.229, 0.224, 0.225])  # Normalize (ImageNet std)
-        ])
-        train = PneumoniaDataset(root_dir=TRAIN_DIR.as_posix(), transform=train_transform)
-        val = PneumoniaDataset(root_dir=VAL_DIR.as_posix(), transform=val_transform)
-        test = PneumoniaDataset(root_dir=TEST_DIR.as_posix(), transform=val_transform)
+        if self.config.use_class_weights:
+            train_folder = "../data/processed/train"
+            val_folder = "../data/processed/val"
+            test_folder = "../data/processed/test"
+        else:
+            train_folder = "../data/raw/train"
+            val_folder = "../data/raw/val"
+            test_folder = "../data/raw/test"
 
-        train_loader = torch.utils.data.DataLoader(dataset=train, batch_size=self.config.batch_size, shuffle=True, num_workers=self.config.num_workers, persistent_workers=True)
-        test_loader = torch.utils.data.DataLoader(dataset=test, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
-        val_loader = torch.utils.data.DataLoader(dataset=val, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
+        train_dataset = ImageFolder(root=train_folder, transform=train_transform)
+        val_dataset = ImageFolder(root=val_folder, transform=val_test_transform)
+        test_dataset = ImageFolder(root=test_folder, transform=val_test_transform)
+
+        train_loader = DataLoader(train_dataset, batch_size=self.config.batch_size, shuffle=True, num_workers=self.config.num_workers, persistent_workers=True)
+        val_loader = DataLoader(val_dataset, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
+        test_loader = DataLoader(test_dataset, batch_size=self.config.batch_size, shuffle=False, num_workers=self.config.num_workers, persistent_workers=True)
 
         return train_loader, val_loader, test_loader
 
@@ -112,9 +152,17 @@ class PneumoniaClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         data, label = batch
-        label = label
+        print(
+            f"Data device: {data.device}, Label device: {label.device}, Model device: {next(self.parameters()).device}, Class weights device: {self.class_weights.device}")
+        data, label = data.to(self.device), label.to(self.device)  # Move input to the correct device
+
+        # Forward pass
         output = self.forward(data)
-        loss = nn.CrossEntropyLoss()(output, label)
+
+        # Use the precomputed and device-moved class weights
+        loss_fn = nn.CrossEntropyLoss(
+            weight=self.class_weights) if self.class_weights is not None else nn.CrossEntropyLoss()
+        loss = loss_fn(output, label)
 
         preds = torch.argmax(output, dim=1)
 
@@ -124,14 +172,13 @@ class PneumoniaClassifier(pl.LightningModule):
         self.recall.update(preds, label)
         self.f1.update(preds, label)
 
-        # Log metrics for the step
+        # Log metrics
         self.log('train_loss_step', loss, prog_bar=True, on_step=True)
-        self.log('train_acc_step', self.accuracy.compute(), prog_bar=True, on_step=True)
-        self.log('train_precision_step', self.precision.compute(), prog_bar=True, on_step=True)
-        self.log('train_recall_step', self.recall.compute(), prog_bar=True, on_step=True)
-        self.log('train_f1_step', self.f1.compute(), prog_bar=True, on_step=True)
-
         return loss
+
+    def on_fit_start(self):
+        if self.class_weights is not None:
+            self.class_weights = self.class_weights.to(self.device)
 
     def validation_step(self, batch, batch_idx):
         val_data, val_label = batch
@@ -237,7 +284,9 @@ class Config:
             num_workers,
             model_name,
             version,
-            optimizer_name
+            optimizer_name,
+            use_class_weights,
+            image_res
         ):
         self.backbone_name = backbone_name
         self.transfer_learning = transfer_learning
@@ -250,3 +299,5 @@ class Config:
         self.model_name = model_name
         self.version = version
         self.optimizer_name = optimizer_name
+        self.use_class_weights = use_class_weights,
+        self.image_res = image_res

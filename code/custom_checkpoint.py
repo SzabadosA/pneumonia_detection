@@ -12,7 +12,7 @@ class CustomModelCheckpoint(ModelCheckpoint):
         return checkpoint
 
     def _save_model(self, trainer, pl_module, filepath):
-        # Call the parent method to save the model checkpoint
+        # Call the parent method to save the models checkpoint
         super()._save_model(trainer, pl_module, filepath)
 
         # Add custom metadata

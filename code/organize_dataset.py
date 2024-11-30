@@ -19,7 +19,7 @@ def reorganize_all_files(raw_dir, processed_dir, train_split=0.7, val_split=0.15
                     [os.path.join(cls_dir, f) for f in os.listdir(cls_dir) if os.path.isfile(os.path.join(cls_dir, f))]
                 )
 
-    # Ensure the processed directory structure exists
+    # Ensure the reordered directory structure exists
     for split in ["train", "val", "test"]:
         for cls in classes:
             os.makedirs(os.path.join(processed_dir, split, cls), exist_ok=True)
@@ -29,7 +29,7 @@ def reorganize_all_files(raw_dir, processed_dir, train_split=0.7, val_split=0.15
         train_files, temp_files = train_test_split(all_files[cls], test_size=(val_split + test_split), random_state=42)
         val_files, test_files = train_test_split(temp_files, test_size=(test_split / (val_split + test_split)), random_state=42)
 
-        # Move files to the processed directory
+        # Move files to the reordered directory
         for file_set, split in zip([train_files, val_files, test_files], ["train", "val", "test"]):
             for file in file_set:
                 dest_dir = os.path.join(processed_dir, split, cls)
@@ -39,5 +39,5 @@ def reorganize_all_files(raw_dir, processed_dir, train_split=0.7, val_split=0.15
 
 # Example usage
 raw_dir = "../data/raw"
-processed_dir = "../data/processed"
+processed_dir = "../data/reordered"
 reorganize_all_files(raw_dir, processed_dir)

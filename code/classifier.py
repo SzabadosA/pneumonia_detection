@@ -62,7 +62,7 @@ class PneumoniaClassifier(pl.LightningModule):
         )
         self.early_stopping_callback = EarlyStopping(
             monitor='val_loss',
-            patience=3,
+            patience=10,
             verbose=True,
             mode='min'
         )
@@ -113,8 +113,8 @@ class PneumoniaClassifier(pl.LightningModule):
     def create_dataloaders(self):
         train_transform = transforms.Compose([
             transforms.Resize(self.config.image_res),
-            transforms.RandomResizedCrop(self.config.image_res),
-            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.CenterCrop((self.config.image_res*0.4, self.config.image_res*0.4)),
+            #transforms.RandomHorizontalFlip(p=0.5),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
@@ -259,7 +259,7 @@ class PneumoniaClassifier(pl.LightningModule):
         else:
             raise ValueError(f"Unsupported optimizer: {self.config.optimizer_name}")
 
-        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, verbose=True)
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
     def train_model(self):

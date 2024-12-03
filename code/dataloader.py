@@ -1,11 +1,15 @@
+from PIL.Image import Transform
 from torch.utils.data import DataLoader, Dataset, random_split, Subset
 from PIL import Image
 import os
+import numpy as np
+from torchvision import transforms
 
 class PneumoniaDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transform=None, resolution=256):
         self.root_dir = root_dir
         self.transform = transform
+        self.resolution = resolution
 
         # Gather all image paths and labels
         self.image_paths = []
@@ -24,10 +28,8 @@ class PneumoniaDataset(Dataset):
 
     def __getitem__(self, index):
         img_path = self.image_paths[index]
-        img = Image.open(img_path).convert('RGB')  # Ensure RGB format
+        img = Image.open(img_path).convert('RGB')
         label = self.labels[index]
-
         if self.transform:
             img = self.transform(img)
-
-        return img, label
+        return img, label, img_path

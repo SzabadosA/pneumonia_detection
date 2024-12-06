@@ -18,7 +18,7 @@ import os
 import numpy as np
 
 
-def plot_random_image_from_loader(dataset, dataset_name):
+def plot_random_image_from_loader(dataset, dataset_name, normalize=True):
     import numpy as np
 
     # Select a random index
@@ -27,18 +27,21 @@ def plot_random_image_from_loader(dataset, dataset_name):
     # Fetch the image and label directly
     image, label, path = dataset[random_idx]
 
+
     # Convert tensor image to numpy for visualization
     if isinstance(image, torch.Tensor):
         # If normalized, reverse normalization (only if normalization is applied in transforms)
         # Uncomment if Normalize is used in transforms
-        mean = torch.tensor([0.485, 0.456, 0.406])
-        std = torch.tensor([0.229, 0.224, 0.225])
 
+        if normalize:
+            mean = torch.tensor([0.485, 0.456, 0.406])
+            std = torch.tensor([0.229, 0.224, 0.225])
+        else:
+            mean = torch.tensor([0.0, 0.0, 0.0])
+            std = torch.tensor([1.0, 1.0, 1.0])
         image = image * std[:, None, None] + mean[:, None, None]
-
         # Convert to HWC format for plotting
         image = image.permute(1, 2, 0).cpu().numpy()
-
     # Clip values to [0, 1] for visualization
     image = np.clip(image, 0, 1)
 

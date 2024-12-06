@@ -28,7 +28,7 @@ def batch_process_notebooks(notebook_list, output_dir, timeout=0):
             ep.preprocess(notebook, {'metadata': {'path': os.path.dirname(notebook_path)}})
 
             # Save the executed notebook to the output directory
-            output_path = os.path.join(output_dir, os.path.basename(notebook_path.replace('_batch.ipynb', '.ipynb')))
+            output_path = os.path.join(output_dir, os.path.basename(notebook_path.replace('.ipynb', '_out.ipynb')))
             with open(output_path, 'w', encoding='utf-8') as output_file:
                 nbformat.write(notebook, output_file)
             print(f"Notebook processed and saved to: {output_path}")
@@ -39,16 +39,27 @@ def batch_process_notebooks(notebook_list, output_dir, timeout=0):
 if __name__ == "__main__":
     # Example usage
     notebooks_to_process = [
-        "../notebooks/Resnet18_equalize.ipynb",
-        "../notebooks/Resnet18_raw.ipynb",
-        "../notebooks/Resnet18_reordered.ipynb",
-        "../notebooks/Resnet18_reordered_weighted.ipynb",
-        "../notebooks/Resnet18_unfreez.ipynb",
-        "../notebooks/Resnet18_upscal.ipynb",
-        "../notebooks/Resnet18_upscale_unfreez.ipynb",
-        "../notebooks/Resnet18_premul.ipynb",
-
-    ]
+    "../notebooks/DenseNet131_gradual_unfreeze.ipynb",
+    "../notebooks/DenseNet131-premult.ipynb",
+    "../notebooks/DenseNet131_unfreeze.ipynb",
+    "../notebooks/EfficientNet_gradual_unfreeze.ipynb",
+    "../notebooks/EfficientNet_premult.ipynb",
+    "../notebooks/EfficientNet_unfreeze.ipynb",
+    "../notebooks/Resnet18_equalized.ipynb",
+    "../notebooks/Resnet18_gradual_unfreeze.ipynb",
+    "../notebooks/Resnet18_premult.ipynb",
+    "../notebooks/Resnet18_raw.ipynb",
+    "../notebooks/Resnet18_reordered.ipynb",
+    "../notebooks/Resnet18_reordered_weighted.ipynb",
+    "../notebooks/Resnet18_unfreeze.ipynb",
+    "../notebooks/Resnet18_upscale_unfreeze.ipynb",
+    "../notebooks/Resnet50_gradual_unfreeze.ipynb",
+    "../notebooks/Resnet50_premult.ipynb",
+    "../notebooks/Resnet50_unfreeze.ipynb",
+    "../notebooks/ViT_premult.ipynb",
+    "../notebooks/ViT_unfreeze.ipynb",
+    "../notebooks/ViT_unfreeze_gradual.ipynb"
+]
     output_directory = "../notebooks"
 
     batch_process_notebooks(notebooks_to_process, output_directory)

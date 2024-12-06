@@ -30,7 +30,8 @@ conda install conda-forge::opencv
 conda install conda-forge::matplotlib
 conda install conda-forge::torchcam
 conda install conda-forge::segmentation-models-pytorch
-pip install lungmask
+conda install conda-forge::transformers
+
 ```
 https://www.robots.ox.ac.uk/~vgg/software/via/
 # Project Structure

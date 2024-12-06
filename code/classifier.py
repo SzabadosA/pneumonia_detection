@@ -9,6 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torchvision.datasets import ImageFolder
 from code.dataloader import PneumoniaDataset
 from code.custom_checkpoint import CustomModelCheckpoint
+from transformers import ViTForImageClassification, ViTImageProcessor
 from code.project_globals import TEST_DIR, TRAIN_DIR, VAL_DIR
 from torchvision import transforms
 import os
@@ -52,24 +53,39 @@ class PneumoniaClassifier(pl.LightningModule):
         self.f1 = F1Score(task='binary')
         self.specificity = Specificity(task='binary')
 
-        # Model backbone
-        backbone = getattr(models, config.backbone_name)(weights='DEFAULT')
-        if 'resnet' in config.backbone_name:
-            num_filters = backbone.fc.in_features
-        elif 'densenet' in config.backbone_name:
-            num_filters = backbone.classifier.in_features
-        elif 'efficientnet' in config.backbone_name:
-            num_filters = backbone.classifier[1].in_features
+        # Check for ViT
+        if "vit" in config.backbone_name:
+            self.processor = ViTImageProcessor.from_pretrained(config.backbone_name)
+            self.feature_extractor = ViTForImageClassification.from_pretrained(
+                config.backbone_name, num_labels=2, ignore_mismatched_sizes=True
+            )
+            # Replace classifier with custom one
+            self.feature_extractor.classifier = nn.Identity()  # Remove the default classifier
+            self.classifier = nn.Linear(self.feature_extractor.config.hidden_size, 2)
+            self.vit_layers = list(self.feature_extractor.vit.encoder.layer)  # Store ViT encoder layers
 
-        layers = list(backbone.children())[:-1]
-        self.feature_extractor = nn.Sequential(*layers)
+        else:
+            # Model backbone
+            backbone = getattr(models, config.backbone_name)(weights='DEFAULT')
+            if 'efficientnet' in config.backbone_name:
+                num_filters = backbone.classifier[1].in_features
+            elif 'densenet' in config.backbone_name:
+                num_filters = backbone.classifier.in_features
+            else:
+                num_filters = backbone.fc.in_features
 
-        if config.transfer_learning:
+            layers = list(backbone.children())[:-1]
+            self.feature_extractor = nn.Sequential(*layers)
+
+            # Initially freeze all layers
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
 
-        self.dropout = nn.Dropout(p=config.dropout)
-        self.classifier = nn.Linear(num_filters, 2)
+            self.dropout = nn.Dropout(p=config.dropout)
+            self.classifier = nn.Linear(num_filters, 2)
+
+        # Add a tracker for unfrozen layers
+        self.currently_unfrozen = 0  # Number of layers currently unfrozen
 
         # Create dataloaders and compute class weights
         self.train_loader, self.val_loader, self.test_loader, self.gradcam_loader = self.create_dataloaders()
@@ -103,6 +119,50 @@ class PneumoniaClassifier(pl.LightningModule):
             accumulate_grad_batches=1
         )
 
+    def unfreeze_next_layers(self, num_layers_to_unfreeze=1):
+        """
+        Unfreeze the next set of layers in the feature extractor.
+        Args:
+            num_layers_to_unfreeze (int): Number of layers to unfreeze in each step.
+        """
+        if "vit" in self.config.backbone_name:
+            # Handle ViT layers specifically
+            for i in range(
+                self.currently_unfrozen,
+                min(self.currently_unfrozen + num_layers_to_unfreeze, len(self.vit_layers))
+            ):
+                for param in self.vit_layers[i].parameters():
+                    param.requires_grad = True
+        else:
+            # Handle non-ViT layers
+            layers = list(self.feature_extractor.children())
+            for i in range(
+                self.currently_unfrozen,
+                min(self.currently_unfrozen + num_layers_to_unfreeze, len(layers))
+            ):
+                for param in layers[i].parameters():
+                    param.requires_grad = True
+
+        self.currently_unfrozen += num_layers_to_unfreeze
+        print(f"Unfroze up to layer {self.currently_unfrozen}")
+
+    def get_vit_target_layer(self, layer_index=None):
+        """
+        Retrieve the target layer for Grad-CAM in ViT.
+        Args:
+            layer_index (int): Index of the transformer encoder layer to use.
+                               If None, defaults to the last encoder layer.
+        Returns:
+            nn.Module: The target layer for Grad-CAM.
+        """
+        if "vit" not in self.config.backbone_name:
+            raise ValueError("This method is only applicable to ViT backbones.")
+
+        # Default to the last encoder layer
+        if layer_index is None:
+            layer_index = len(self.vit_layers) - 1
+        return self.vit_layers[layer_index]
+
     def visualize_gradcam(self, num_samples, target_layer, class_names, threshold=0.5):
         """
         Visualize Grad-CAM with an adjustable threshold for highlighting hot regions.
@@ -123,10 +183,26 @@ class PneumoniaClassifier(pl.LightningModule):
         self.eval()
 
         # Retrieve the target layer
-        target_layer = self.feature_extractor[target_layer]
+        if "efficientnet" in self.config.backbone_name:
+            target_layer = target_layer
+        if "vit" in self.config.backbone_name:
+            if target_layer is None:
+                target_layer = self.get_vit_target_layer()  # Default to the last encoder layer
+            elif isinstance(target_layer, int):
+                target_layer = self.get_vit_target_layer(target_layer)  # Use specified layer
+        else:
+            target_layer = self.feature_extractor[target_layer]
+
+        def vit_reshape_transform(output):
+            hidden_states = output[0]  # First element is the hidden states
+            return hidden_states[:, 1:, :].mean(dim=1)  # Mean pooling (ignores CLS token)
 
         # Initialize GradCAM
-        gradcam = GradCAM(model=self, target_layers=[target_layer])
+        gradcam = GradCAM(
+            model=self,
+            target_layers=[target_layer],
+            reshape_transform=vit_reshape_transform if "vit" in self.config.backbone_name else None
+        )
 
         # Sample random images from the test set
         dataset = self.gradcam_loader.dataset
@@ -183,28 +259,53 @@ class PneumoniaClassifier(pl.LightningModule):
         model.load_state_dict(checkpoint['state_dict'])
         return model
 
+    def identity_transform(self, x):
+        return x
+
     def create_dataloaders(self):
-        train_transform = transforms.Compose([
-            transforms.Lambda(make_square),  # Pass the function itself, not the result of calling it
-            transforms.Resize((self.config.image_res, self.config.image_res)),  # Resize to target resolution
-            transforms.RandomRotation(3),  # Apply small random rotation
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
 
-        val_transform = transforms.Compose([
-            transforms.Lambda(make_square),
-            transforms.Resize((self.config.image_res, self.config.image_res)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        if 'vit' in self.config.backbone_name:
+            train_transform = transforms.Compose([
+                transforms.Lambda(make_square),  # Pass the function itself, not the result of calling it
+                transforms.Resize((self.config.image_res, self.config.image_res)),  # Resize to target resolution
+                transforms.RandomRotation(3),  # Apply small random rotation
+                transforms.ToTensor(),
+            ])
 
-        test_transform = transforms.Compose([
-            transforms.Lambda(make_square),
-            transforms.Resize((self.config.image_res, self.config.image_res)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+            val_transform = transforms.Compose([
+                transforms.Lambda(make_square),
+                transforms.Resize((self.config.image_res, self.config.image_res)),
+                transforms.ToTensor(),
+            ])
+
+            test_transform = transforms.Compose([
+                transforms.Lambda(make_square),
+                transforms.Resize((self.config.image_res, self.config.image_res)),
+                transforms.ToTensor(),
+            ])
+
+        else:
+            train_transform = transforms.Compose([
+                transforms.Lambda(make_square),  # Pass the function itself, not the result of calling it
+                transforms.Resize((self.config.image_res, self.config.image_res)),  # Resize to target resolution
+                transforms.RandomRotation(3),  # Apply small random rotation
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+
+            val_transform = transforms.Compose([
+                transforms.Lambda(make_square),
+                transforms.Resize((self.config.image_res, self.config.image_res)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+
+            test_transform = transforms.Compose([
+                transforms.Lambda(make_square),
+                transforms.Resize((self.config.image_res, self.config.image_res)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
 
         train_folder = None
         val_folder = None
@@ -260,10 +361,16 @@ class PneumoniaClassifier(pl.LightningModule):
         return train_loader, val_loader, test_loader, gradcam_loader
 
     def forward(self, x):
-        # Do not set the feature extractor to eval here, as Grad-CAM requires gradients.
-        representations = self.feature_extractor(x).flatten(1)
-        representations = self.dropout(representations)
-        return self.classifier(representations)
+        if "vit" in self.config.backbone_name:
+            x = self.processor(images=x, return_tensors="pt", do_rescale=False)["pixel_values"].to(self.device)
+
+            # Extract the logits from the ViT output tuple
+            features = self.feature_extractor.vit(pixel_values=x).last_hidden_state[:, 0, :]  # CLS token
+        else:
+            features = self.feature_extractor(x).flatten(1)
+
+        logits = self.classifier(features)
+        return logits
 
     def training_step(self, batch, batch_idx):
         data, label, _ = batch
@@ -317,11 +424,18 @@ class PneumoniaClassifier(pl.LightningModule):
         self.precision.compute()
         self.recall.compute()
         self.f1.compute()
+        self.specificity.compute()
 
         return val_loss
 
     def on_train_epoch_end(self):
-        pass
+        # Unfreeze layers gradually every `unfreeze_interval` epochs
+        if self.config.gradually_unfreeze:
+            if (self.current_epoch + 1) % self.config.unfreeze_interval == 0:
+                self.unfreeze_next_layers(num_layers_to_unfreeze=self.config.num_layers_to_unfreeze)
+        else:
+            pass
+
 
     def test_step(self, batch, batch_idx):
         test_data, test_label, _ = batch
@@ -397,7 +511,17 @@ class PneumoniaClassifier(pl.LightningModule):
         else:
             raise ValueError(f"Unsupported optimizer: {self.config.optimizer_name}")
 
-        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=self.config.patience, verbose=True)
+        # Use different learning rates for frozen and unfrozen layers
+        if self.config.gradually_unfreeze:
+            optimizer = torch.optim.Adam([
+                {'params': self.feature_extractor.parameters(), 'lr': self.config.frozen_lr},
+                {'params': self.classifier.parameters(), 'lr': self.config.unfrozen_lr}
+            ], weight_decay=self.config.weight_decay)
+        else:
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.config.learning_rate,
+                                         weight_decay=self.config.weight_decay)
+
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, verbose=True)
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
     def train_model(self):
@@ -426,7 +550,12 @@ class Config:
             use_class_weights,
             image_res,
             patience,
-            image_type
+            image_type,
+            frozen_lr=None,
+            unfrozen_lr=None,
+            unfreeze_interval=None,
+            num_layers_to_unfreeze=None,
+            gradually_unfreeze=False
         ):
         self.backbone_name = backbone_name
         self.transfer_learning = transfer_learning
@@ -443,3 +572,8 @@ class Config:
         self.image_res = image_res
         self.patience = patience
         self.image_type = image_type
+        self.frozen_lr = frozen_lr
+        self.unfrozen_lr = unfrozen_lr
+        self.unfreeze_interval = unfreeze_interval
+        self.num_layers_to_unfreeze = num_layers_to_unfreeze
+        self.gradually_unfreeze = gradually_unfreeze

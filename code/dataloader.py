@@ -1,9 +1,6 @@
-from PIL.Image import Transform
-from torch.utils.data import DataLoader, Dataset, random_split, Subset
+from torch.utils.data import Dataset
 from PIL import Image
 import os
-import numpy as np
-from torchvision import transforms
 
 class PneumoniaDataset(Dataset):
     def __init__(self, root_dir, transform=None, resolution=256):

@@ -3,11 +3,6 @@ import random
 import numpy as np
 import torch
 
-import matplotlib.pyplot as plt
-import random
-import numpy as np
-import torch
-
 def plot_random_images_with_labels(model, dataloader, num_images=20, seed=42):
     """
     Plots random images from the dataset with their actual labels, predicted labels, and filenames.

@@ -374,6 +374,9 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
         self.dropout = nn.Dropout(p=config.dropout)
         self.classifier = nn.Linear(num_filters, 2)
 
+        if 'dense' in config.backbone_name:
+            self.classifier = nn.Linear(50176, 2)
+
         if config.transfer_learning:
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
@@ -500,20 +503,31 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
         self.feature_extractor = ViTForImageClassification.from_pretrained(
             config.backbone_name, num_labels=2, ignore_mismatched_sizes=True
         )
-        # Replace classifier with custom one
-        self.feature_extractor.classifier = nn.Identity()  # Remove the default classifier
+
+        self.feature_extractor.classifier = nn.Identity()  # Remove default classifier
         self.classifier = nn.Linear(self.feature_extractor.config.hidden_size, 2)
-        self.vit_layers = list(self.feature_extractor.vit.encoder.layer)  # Store ViT encoder layers
+
+        self.vit_layers = list(self.feature_extractor.vit.encoder.layer)
 
         if config.transfer_learning:
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
 
+    def forward(self, x):
+        if x.max() > 1 or x.min() < 0:
+            raise ValueError(f"Input tensor values must be in [0, 1]. Got range [{x.min()}, {x.max()}]")
+
+        x = self.processor(images=x, return_tensors="pt", do_rescale=False)["pixel_values"].to(self.device)
+        vit_output = self.feature_extractor.vit(pixel_values=x)
+        features = vit_output.last_hidden_state[:, 0, :]
+        logits = self.classifier(features)
+        return logits
+
     def create_transforms(self):
         train_transform = transforms.Compose([
-            transforms.Lambda(make_square),  # Pass the function itself, not the result of calling it
-            transforms.Resize((self.config.image_res, self.config.image_res)),  # Resize to target resolution
-            transforms.RandomRotation(3),  # Apply small random rotation
+            transforms.Lambda(make_square),
+            transforms.Resize((self.config.image_res, self.config.image_res)),
+            transforms.RandomRotation(3),
             transforms.ToTensor(),
         ])
         val_transform = transforms.Compose([
@@ -528,94 +542,86 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
         ])
         return train_transform, val_transform, test_transform
 
-    def forward(self, x):
-        x = self.processor(images=x, return_tensors="pt", do_rescale=False)["pixel_values"].to(self.device)
-        features = self.feature_extractor.vit(pixel_values=x).last_hidden_state[:, 0, :]
-        return self.classifier(features)
-
-    def unfreeze_next_layers(self, num_layers_to_unfreeze=1):
-        """
-        Unfreeze the next set of layers in the feature extractor.
-        Args:
-            num_layers_to_unfreeze (int): Number of layers to unfreeze in each step.
-        """
-        # Handle ViT layers specifically
-        for i in range(
-            self.currently_unfrozen,
-            min(self.currently_unfrozen + num_layers_to_unfreeze, len(self.vit_layers))
-        ):
-            for param in self.vit_layers[i].parameters():
-                param.requires_grad = True
-        self.currently_unfrozen += num_layers_to_unfreeze
-        print(f"Unfroze up to layer {self.currently_unfrozen}")
-
     def get_vit_target_layer(self, layer_index=None):
-        """
-        Retrieve the target layer for Grad-CAM in ViT.
-        Args:
-            layer_index (int): Index of the transformer encoder layer to use.
-                               If None, defaults to the last encoder layer.
-        Returns:
-            nn.Module: The target layer for Grad-CAM.
-        """
-        if "vit" not in self.config.backbone_name:
-            raise ValueError("This method is only applicable to ViT backbones.")
-
-        # Default to the last encoder layer
         if layer_index is None:
             layer_index = len(self.vit_layers) - 1
-        return self.vit_layers[layer_index]
 
-    def visualize_gradcam(self, num_samples, target_layer, class_names, threshold=0.5):
+        return target_layer
+
+    def vit_reshape_transform(self, tensor):
+        """
+        Reshape the output tensor of the ViT model to match the expected shape for Grad-CAM visualization.
+        """
+        if isinstance(tensor, tuple):
+            tensor = tensor[0]  # Extract the primary output tensor
+
+        if not isinstance(tensor, torch.Tensor):
+            raise ValueError(f"[DEBUG] Invalid input to reshape_transform. Expected a tensor, got {type(tensor)}")
+
+        # Assuming tensor shape [batch_size, seq_len, hidden_dim]
+        result = tensor[:, 1:, :].reshape(tensor.size(0), 14, 14, tensor.size(2))  # Adjust height and width as needed
+        result = result.permute(0, 3, 1, 2)  # Convert to [batch_size, hidden_dim, height, width]
+        return result
+
+    def forward_hook(self, module, input, output):
+        return output
+
+    def visualize_gradcam(self, target_layer_index=None, threshold=0.5):
+        """
+        Simplified Grad-CAM visualization for a single image.
+        """
+        import torch
         from pytorch_grad_cam import GradCAM
         from pytorch_grad_cam.utils.image import show_cam_on_image
-        import random
-        import matplotlib.pyplot as plt
         import numpy as np
+        import matplotlib.pyplot as plt
+
+        print("Starting simplified Grad-CAM visualization...")
+        image, label, _ = self.gradcam_loader.dataset[0]  # Get the first sample
+        class_names = ["Normal", "Pneumonia"]  # Example class names
 
         self.eval()
 
-        # Ensure the target layer is correctly retrieved
-        target_layer = self.get_vit_target_layer(target_layer)
+        # Select target layer
+        if target_layer_index is None:
+            target_layer_index = len(self.vit_layers) - 1
+        target_layer = self.get_vit_target_layer(layer_index=target_layer_index)
 
-        def vit_reshape_transform(output):
-            hidden_states = output[0]
-            return hidden_states[:, 1:, :].mean(dim=1)  # Mean pooling (ignores CLS token)
+        # Add debugging hook
+        target_layer.register_forward_hook(self.forward_hook)
 
         gradcam = GradCAM(
             model=self,
             target_layers=[target_layer],
-            reshape_transform=vit_reshape_transform
+            reshape_transform=self.vit_reshape_transform
         )
 
-        # Randomly sample from the Grad-CAM loader
-        dataset = self.gradcam_loader.dataset
-        samples = random.sample(range(len(dataset)), num_samples)
+        # Preprocess image
+        image = image.unsqueeze(0).to(self.device)
 
-        for idx in samples:
-            inputs, label, img_name = dataset[idx]
-            inputs = inputs.unsqueeze(0).to(self.device)  # Add batch dimension
+        # Forward pass
+        image.requires_grad = True
+        outputs = self.forward(image)
 
-            # Generate Grad-CAM heatmap
-            grayscale_cam = gradcam(input_tensor=inputs)[0]
-            if grayscale_cam is None:
-                print(f"Grad-CAM returned None for {img_name}")
-                continue
+        # Loss and backward pass
+        loss = outputs[0, label]
+        self.zero_grad()
+        loss.backward(retain_graph=True)
 
-            # Thresholding
-            grayscale_cam[grayscale_cam < threshold] = 0
+        # Generate Grad-CAM heatmap
+        grayscale_cam = gradcam(input_tensor=image)[0]
+        grayscale_cam[grayscale_cam < threshold] = 0
 
-            # Normalize and prepare the input image
-            input_image = inputs[0].permute(1, 2, 0).cpu().numpy()
-            input_image = (input_image - input_image.min()) / (input_image.max() - input_image.min())
-            input_image = input_image.astype(np.float32)
+        # Overlay heatmap
+        input_image = image[0].permute(1, 2, 0).cpu().numpy()
+        input_image = (input_image - input_image.min()) / (input_image.max() - input_image.min())
+        heatmap = show_cam_on_image(input_image.astype(np.float32), grayscale_cam, use_rgb=True)
 
-            # Generate and show the heatmap
-            heatmap = show_cam_on_image(input_image, grayscale_cam, use_rgb=True)
-            plt.imshow(heatmap)
-            plt.title(f"Class: {class_names[label]} - {img_name}")
-            plt.axis("off")
-            plt.show()
+        # Display result
+        plt.imshow(heatmap)
+        plt.title(f"Class: {class_names[label] if class_names else label}")
+        plt.axis("off")
+        plt.show()
 
 
 class Config:

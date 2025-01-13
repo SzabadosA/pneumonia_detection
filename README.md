@@ -1,24 +1,36 @@
 # Pneumonia Detection 
-This project aims to build a classifier utilizing transfer learning for Pneumonia Detection and comparing between popular pretrained models such as ResetNet18 and ImageNet.
+Medical image classification plays a vital role in healthcare, aiding in precise and timely disease diagnosis. This project focuses on developing a flexible machine learning-based classification system to evaluate and compare the performance of various models on the Chest X-ray Images (Pneumonia) dataset from Kaggle. The dataset consists of 5,863 labeled chest X-ray images divided into two categories: Normal and  Pneumonia.
+
+The primary objective is to identify the best-performing model for pneumonia detection by leveraging transfer learning with pre-trained convolutional neural networks such as DenseNet131, EfficientNet, ResNet18, ResNet50, and exploring transformer-based methods like Visual Transformers (ViT). The project emphasizes fine-tuning these models to ensure optimal performance on the dataset.
+
+To comprehensively evaluate model performance, metrics including Accuracy, F1-Score, Precision, Recall, Specificity, AUC/ROC curves, and confusion matrices are employed. Additionally, Grad-CAM is utilized for visualization and explainability, highlighting the critical lung regions influencing the models' predictions.
+
+The ultimate goal is to build a robust and adaptable classifier written with Pytorch Lightning, capable of reliably distinguishing between healthy lungs and pneumonia-affected lungs. This project underscores the potential of deep learning models in advancing medical image analysis and supporting radiologists in early disease diagnosis through systematic model comparison and explainability.
+
+![Description of Image](misc/plotresults.PNG)
 
 # Dataset
 The project is based on the public chest-xray-pneumonia kaggle dataset:
 ```
-curl -L -o ./data/dataset.zip\ https://www.kaggle.com/api/v1/datasets/download/paultimothymooney/chest-xray-pneumonia
+https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
 ```
-Unzip the test, train and val folder into data/raw
+All images, pretrained models and misc can be downloaded at:
+```
+https://drive.google.com/drive/folders/1MIcgEqpcMU24N4lEFqmBIhDUXR6jAzv2?usp=sharing
+```
+
+All downloaded folders should be placed in the root of the project directory.
 ```
 project/
-├── data/                  # Dataset
-│   ├── raw/
-│   │   ├── test/
-│   │   ├── val/
-│   │   ├── train/
-│   ├── processed/
+├── checkpoints/                 
+├── code/ 
+├── data/ 
+├── models/
+├── notebooks/  
 ```
 # Installation
 
-The recommended installation is to set up a conda environment with the following dependencies:
+It is recommended to set up a conda environment with the following dependencies:
 ```
 conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 conda install conda-forge::pytorch-lightning
@@ -31,39 +43,4 @@ conda install conda-forge::matplotlib
 conda install conda-forge::torchcam
 conda install conda-forge::segmentation-models-pytorch
 conda install conda-forge::transformers
-
-```
-https://www.robots.ox.ac.uk/~vgg/software/via/
-# Project Structure
-```
-project/
-├── notebooks/             # For interactive exploration and demonstration
-│   ├── checkpoints
-│   ├── tb_logs
-│   │   ├── pneumonia_classifier
-│   ├── data_preprocessing.ipynb
-│   ├── model_training.ipynb
-│   ├── gradcam_visualization.ipynb
-│   ├── inference_demo.ipynb
-├── code/                  # Reusable code modules
-│   ├── data_preprocessing.py
-│   ├── models.py
-│   ├── training.py
-│   ├── gradcam_visualization.py
-│   ├── inference.py
-├── data/                  # Dataset
-│   ├── raw/
-│   ├── processed/
-├── checkpoints/           # Model checkpoints
-│   ├── resnet50_best.ckpt
-│   ├── custom_model_best.ckpt
-├── results/               # Results and visualizations
-│   ├── gradcam/
-│   ├── metrics_summary.csv
-│   ├── plots/
-├── report/                # Final report
-│   ├── main.tex
-│   ├── references.bib
-│   └── final_report.pdf
-└── README.md
 ```

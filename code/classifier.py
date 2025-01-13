@@ -37,6 +37,31 @@ def make_square(image, fill=0):
 class PneumoniaClassifier(pl.LightningModule):
 
     def __init__(self, config):
+        """
+        A base classifier for pneumonia detection built using PyTorch Lightning.
+
+        This class serves as a flexible framework to experiment with different deep learning architectures,
+        including CNNs and Vision Transformers, for binary classification tasks. It integrates data loaders,
+        training, evaluation, and model checkpointing functionalities. It also supports class weighting for
+        imbalanced datasets and gradual unfreezing for transfer learning.
+
+        Attributes:
+            config (object): Configuration containing model hyperparameters.
+            accuracy (torchmetrics.Metric): Binary classification accuracy metric.
+            precision (torchmetrics.Metric): Binary classification precision metric.
+            recall (torchmetrics.Metric): Binary classification recall metric.
+            f1 (torchmetrics.Metric): F1 score for binary classification.
+            specificity (torchmetrics.Metric): Specificity metric to measure true negative rate.
+            currently_unfrozen (int): Counter for layers unfrozen during gradual unfreezing.
+            train_loader (DataLoader): DataLoader for training data.
+            val_loader (DataLoader): DataLoader for validation data.
+            test_loader (DataLoader): DataLoader for testing data.
+            gradcam_loader (DataLoader): DataLoader for Grad-CAM visualization data.
+            class_weights (torch.Tensor): Tensor of class weights for handling imbalanced datasets.
+            checkpoint_callback (CustomModelCheckpoint): Callback for saving the best model checkpoint.
+            early_stopping_callback (EarlyStopping): Callback to stop training when validation loss stops improving.
+            trainer (pl.Trainer): PyTorch Lightning Trainer instance for managing training and evaluation.
+        """
         super().__init__()  # Initialize the base LightningModule
         self.config = config  # Configuration object containing hyperparameters
         self.save_hyperparameters(ignore=['backbone'])  # Save hyperparameters for reproducibility
@@ -520,7 +545,7 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
 
         # Retrieve the target layer from the feature extractor.
         if 'densenet' in self.config.backbone_name:
-            target_layer = self.feature_extractor[0].denseblock4.denselayer16 # Specific layer in denseblock4
+            target_layer = self.feature_extractor[0].denseblock4.denselayer16.conv2 # Specific layer in denseblock4
         elif 'efficientnet' in self.config.backbone_name:
             target_layer = self.feature_extractor[0][8][0]
         else:
@@ -542,9 +567,19 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
         dataset = self.gradcam_loader.dataset
         samples = random.sample(range(len(dataset)), num_samples)
 
+        pneumonia_samples = 0
+
         for idx in samples:
+            if pneumonia_samples >= num_samples:
+                break
+
             # Load the sample image, label, and optional metadata.
             inputs, label, img_name = dataset[idx]
+
+            # Only visualize pneumonia cases (label == 1)
+            if label == 0:
+                continue
+
             inputs = inputs.unsqueeze(0).to(self.device)  # Add a batch dimension and move to the correct device.
             label = int(label)
 
@@ -567,6 +602,8 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
             plt.title(f"Class: {class_names[label]} - {img_name} - (Threshold: {threshold})")
             plt.axis("off")
             plt.show()
+
+            pneumonia_samples += 1
 
 
 

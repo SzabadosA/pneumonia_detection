@@ -16,7 +16,7 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
         nb = nbformat.read(f, as_version=4)
     # Clear all outputs
     for cell in nb['cells']:
-        if cell['cell_type'] == 'code':
+        if cell['cell_type'] == 'code_pn':
             cell['outputs'] = []
             cell['execution_count'] = None
     # Execute the notebook with kernel restart
@@ -28,7 +28,7 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
 
     # Clear all outputs
     for cell in nb['cells']:
-        if cell['cell_type'] == 'code':
+        if cell['cell_type'] == 'code_pn':
             cell['outputs'] = []
             cell['execution_count'] = None
 

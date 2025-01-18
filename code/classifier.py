@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from collections import Counter
+import os
 
 
 
@@ -162,15 +163,32 @@ class PneumoniaClassifier(pl.LightningModule):
         """
         train_transform, val_transform, test_transform = self.create_transforms()  # Get preprocessing transforms
 
-        # Define dataset paths based on image type
-        if self.config.image_type == 0:
-            train_folder, val_folder, test_folder = "../data/raw/train", "../data/raw/val", "../data/raw/test"
-        elif self.config.image_type == 1:
-            train_folder, val_folder, test_folder = "../data/reordered/train", "../data/reordered/val", "../data/reordered/test"
-        elif self.config.image_type == 2:
-            train_folder, val_folder, test_folder = "../data/equalized/train", "../data/equalized/val", "../data/equalized/test"
-        elif self.config.image_type == 3:
-            train_folder, val_folder, test_folder = "../data/premultiplied/train", "../data/premultiplied/val", "../data/premultiplied/test"
+        # Get the absolute path to the `data` folder
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+
+        # Define mapping for image types
+        image_type_mapping = {
+            0: "raw",
+            1: "reordered",
+            2: "equalized",
+            3: "premultiplied",
+        }
+
+        # Get dataset folder name based on image_type
+        dataset_type = image_type_mapping.get(self.config.image_type)
+        if dataset_type is None:
+            raise ValueError(
+                f"Invalid image_type {self.config.image_type}. Expected values: {list(image_type_mapping.keys())}")
+
+        # Construct absolute dataset paths
+        train_folder = os.path.join(base_dir, dataset_type, "train")
+        val_folder = os.path.join(base_dir, dataset_type, "val")
+        test_folder = os.path.join(base_dir, dataset_type, "test")
+
+        # Validate dataset paths
+        for folder in [train_folder, val_folder, test_folder]:
+            if not os.path.exists(folder):
+                raise FileNotFoundError(f"Dataset folder not found: {folder}")
 
         # Create datasets
         train_dataset = PneumoniaDataset(root_dir=train_folder, transform=train_transform,

@@ -28,36 +28,28 @@ class GradCamViT:
         self._register_hooks()
 
     def _register_hooks(self):
-        print("[GradCamViT] Registering hooks")
-
         def forward_hook(module, input, output):
             if isinstance(output, tuple):
                 output = output[0]  # ✅ Extract the first tensor if tuple
             self.feature = output.clone()
-            print(f"[GradCamViT] Forward hook activated. Feature shape: {self.feature.shape}")
 
         def backward_hook(module, grad_input, grad_output):
             if isinstance(grad_output, tuple):
                 grad_output = grad_output[0]  # ✅ Extract tensor if tuple
             self.gradient = grad_output.clone()
-            print(f"[GradCamViT] Backward hook activated. Gradient shape: {self.gradient.shape}")
-            print(f"[GradCamViT] Gradient min: {self.gradient.min().item()}, max: {self.gradient.max().item()}")
 
         self.target_layer.register_forward_hook(forward_hook)
         self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate_cam(self, image_tensor, class_idx):
-        print("[GradCamViT] Generating Grad-CAM")
         image_tensor.requires_grad = True
         for param in self.model.parameters():
             param.requires_grad = True
 
         output = self.model(image_tensor)
-        print(f"[GradCamViT] Model output shape: {output.shape}")
         output.retain_grad()
         self.model.zero_grad()
         output[:, class_idx].backward(retain_graph=True)
-        print(f"[GradCamViT] Output Gradient Min: {output.grad.min()}, Max: {output.grad.max()}")
 
         if self.gradient is None:
             raise RuntimeError("Gradients were not computed. Ensure the model and inputs are correct.")
@@ -66,18 +58,15 @@ class GradCamViT:
         seq_len -= 1  # Exclude CLS token
         height = width = int(seq_len ** 0.5)  # Compute square spatial shape
 
-        print(f"[GradCamViT] Reshaping to (batch, {height}, {width}, {embed_dim})")
         self.feature = self.feature[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
         self.gradient = self.gradient[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
 
         weights = torch.mean(self.gradient, dim=(2, 3), keepdim=True)
         cam = torch.sum(weights * self.feature, dim=1).squeeze().detach().cpu().numpy()
         cam = np.maximum(cam, 0)
-        print(f"[GradCamViT] CAM min: {cam.min()}, max: {cam.max()}")
 
         cam_min, cam_max = cam.min(), cam.max()
         if cam_max - cam_min == 0:
-            print("⚠️ Warning: Grad-CAM has uniform activation. No meaningful heatmap generated.")
             cam = np.zeros_like(cam)
         else:
             cam = (cam - cam_min) / (cam_max - cam_min)
@@ -87,7 +76,6 @@ class GradCamViT:
 
 
 def apply_gradcam(model, image_tensor, is_vit=False):
-    print("[apply_gradcam] Applying Grad-CAM")
     model.train()
 
     if is_vit:

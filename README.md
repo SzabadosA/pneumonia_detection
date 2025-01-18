@@ -28,9 +28,55 @@ project/
 ├── models/
 ├── notebooks/  
 ```
-# Installation
 
-It is recommended to set up a conda environment with the following dependencies:
+
+# Pneumonia Detection
+
+This project provides a machine learning-based pneumonia detection system. Follow the steps below to set up and run the project.
+
+---
+
+## 🚀 Installation Guide
+
+### **1. Prerequisites**
+Ensure you have the following installed:
+- [Miniconda](https://docs.conda.io/en/latest/miniconda.html) (or Anaconda)
+- Python **3.12.3** (installed via Conda)
+- A GPU with CUDA support (Optional but recommended for deep learning)
+
+---
+
+### **2. Clone the Repository**
+Open a terminal or command prompt and run:
+
+```
+git clone https://github.com/SzabadosA/pneumonia_detection.git
+cd pneumonia-detection
+```
+
+---
+
+### **3. Set Up the Conda Environment**
+Create and activate a new Conda environment, replace <custom_name> with a name of your choice (e.g. pneumonia_detection):
+
+```
+conda create --name <custom_name> python=3.12.3
+conda activate <custom_name>
+```
+
+---
+
+### **4. Install Dependencies**
+#### **Install via Install script**
+All necessary dependencies can be installed by running the install script 
+within the activated Conda environment:
+```
+python install.py
+```
+
+#### **Alternative: Manually install dependencies**
+Instead of the install script, the dependencies also can be installed manually using the following commands:
+
 ```
 conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 conda install conda-forge::pytorch-lightning
@@ -43,4 +89,57 @@ conda install conda-forge::matplotlib
 conda install conda-forge::torchcam
 conda install conda-forge::segmentation-models-pytorch
 conda install conda-forge::transformers
+pip install gradio
+
 ```
+
+
+---
+
+### **5. Running the Interface**
+To run the interface, simply execute:
+
+```
+python interface.py
+```
+
+
+
+
+---
+
+## **📄 Project Structure**
+```
+pneumonia-detection/
+│── interface.py           # Main entry point for running the interface
+│── pyproject.toml         # Project metadata and dependencies
+│── README.md              # This file
+│── code_pn/               # Source code
+│   ├── model.py           # Model definition
+│   ├── dataset.py         # Dataset loader
+│   ├── train.py           # Training script
+│   ├── predict.py         # Inference script
+│   └── __init__.py        # Marks code_pn as a package
+│── data/                  # (Optional) Dataset folder
+│── models/                # (Optional) Saved models
+│── notebooks/             # Jupyter notebooks for exploration
+│── checkpoints/           # Training checkpoints
+```
+
+---
+
+## **🎯 Next Steps**
+- ✅ Run Interface for Pneumonia Classification and start exploring the pretrained models: `python interface.py`
+- ✅ Explore Notebooks: The source code for all provided models can be found in their dedicated notebooks in `./notebooks/`
+
+---
+
+## **💌 Contact**
+For questions or issues, open an [issue on GitHub](https://github.com/SzabadosA/pneumonia_detection.git).
+
+---
+
+## **📚 License**
+This project is licensed under the MIT License.
+
+

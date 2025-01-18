@@ -1,271 +1,183 @@
 import os
 import sys
-from transformers import ViTImageProcessor
-sys.path.append(os.path.abspath("./code"))
 import torch
 import gradio as gr
 import numpy as np
+import cv2
 from torchvision import transforms
 from PIL import Image
-from classifier import PneumoniaClassifier, Config
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
-from classifier import CNNPneumoniaClassifier, ViTPneumoniaClassifier
+from transformers import ViTImageProcessor
 
+sys.path.append(os.path.abspath("./code"))
+from classifier import PneumoniaClassifier, Config
+from classifier import CNNPneumoniaClassifier, ViTPneumoniaClassifier
+from pytorch_grad_cam import GradCAM
 
 # Load available models from the saved directory
 MODEL_DIR = "models"
-available_models = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pt")]  # Use .pth instead of .pt
+available_models = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pt")]
 
 
-import torch
-import timm
-import numpy as np
-import cv2
-from skimage import io
+class GradCamViT:
+    def __init__(self, model, target_layer):
+        print("[GradCamViT] Initializing GradCamViT")
+        self.model = model.eval()
+        self.target_layer = target_layer  # Ensure target_layer is set
+        self.feature = None
+        self.gradient = None
+        self._register_hooks()
 
+    def _register_hooks(self):
+        print("[GradCamViT] Registering hooks")
 
-import cv2  # OpenCV for image processing
-import numpy as np  # NumPy for numerical operations
+        def forward_hook(module, input, output):
+            if isinstance(output, tuple):
+                output = output[0]  # ✅ Extract the first tensor if tuple
+            self.feature = output.clone()
+            print(f"[GradCamViT] Forward hook activated. Feature shape: {self.feature.shape}")
 
-class GradCam:
-    def __init__(self, model, target):
-        self.model = model.eval()  # Set the model to evaluation mode
-        self.feature = None  # To store the features from the target layer
-        self.gradient = None  # To store the gradients from the target layer
-        self.handlers = []  # List to keep track of hooks
-        self.target = target  # Target layer for Grad-CAM
-        self._get_hook()  # Register hooks to the target layer
+        def backward_hook(module, grad_input, grad_output):
+            if isinstance(grad_output, tuple):
+                grad_output = grad_output[0]  # ✅ Extract tensor if tuple
+            self.gradient = grad_output.clone()
+            print(f"[GradCamViT] Backward hook activated. Gradient shape: {self.gradient.shape}")
+            print(f"[GradCamViT] Gradient min: {self.gradient.min().item()}, max: {self.gradient.max().item()}")
 
-    # Hook to get features from the forward pass
-    def _get_features_hook(self, module, input, output):
-        self.feature = self.reshape_transform(output)  # Store and reshape the output features
+        self.target_layer.register_forward_hook(forward_hook)
+        self.target_layer.register_full_backward_hook(backward_hook)
 
-    # Hook to get gradients from the backward pass
-    def _get_grads_hook(self, module, input_grad, output_grad):
-        if output_grad.requires_grad:
-            output_grad.register_hook(self._store_grad)  # Register hook to store gradients
-
-    def _store_grad(self, grad):
-        self.gradient = self.reshape_transform(grad)  # Store gradients for later use
-
-    # Register forward hooks to the target layer
-    def _get_hook(self):
-        self.target.register_forward_hook(self._get_features_hook)
-        self.target.register_forward_hook(self._get_grads_hook)
-
-    # Function to reshape the tensor for visualization
-    def reshape_transform(self, tensor, height=14, width=14):
-        result = tensor[:, 1:, :].reshape(tensor.size(0), height, width, tensor.size(2))
-        result = result.transpose(2, 3).transpose(1, 2)  # Rearrange dimensions to (C, H, W)
-        return result
-
-    # Function to compute the Grad-CAM heatmap
-    def __call__(self, inputs):
-        self.model.zero_grad()  # Zero the gradients
-        output = self.model(inputs)  # Forward pass
-
-        # Get the index of the highest score in the output
-        index = np.argmax(output.cpu().data.numpy())
-        target = output[0][index]  # Get the target score
-        target.backward()  # Backward pass to compute gradients
-
-        # Get the gradients and features
-        gradient = self.gradient[0].cpu().data.numpy()
-        weight = np.mean(gradient, axis=(1, 2))  # Average the gradients
-        feature = self.feature[0].cpu().data.numpy()
-
-        # Compute the weighted sum of the features
-        cam = feature * weight[:, np.newaxis, np.newaxis]
-        cam = np.sum(cam, axis=0)  # Sum over the channels
-        cam = np.maximum(cam, 0)  # Apply ReLU to remove negative values
-
-        # Normalize the heatmap
-        cam -= np.min(cam)
-        cam /= np.max(cam)
-        cam = cv2.resize(cam, (224, 224))  # Resize to match the input image size
-        return cam  # Return the Grad-CAM heatmap
-
-def apply_gradcam_CNN(model, image_tensor):
-    """Apply Grad-CAM and plot the result."""
-    model.eval()
-
-    # Ensure gradients are enabled
-    for param in model.parameters():
-        param.requires_grad = True
-
-    # Select the last convolutional layer dynamically
-    target_layer = None
-    for module in model.modules():
-        if isinstance(module, torch.nn.Conv2d):
-            target_layer = module  # Keep overwriting to get the last Conv2D layer
-
-    if target_layer is None:
-        raise ValueError("No convolutional layers found in the model!")
-
-    # Ensure the input tensor allows gradient computation
-    image_tensor.requires_grad = True
-
-    # Initialize Grad-CAM
-    cam = GradCAM(model=model, target_layers=[target_layer])
-
-    # Check if gradients are being recorded
-    for name, param in model.named_parameters():
-        if param.grad is None:
-            print(
-                f"WARNING: No gradients found for {name}. Ensure the model is in train mode and doing a backward pass.")
-
-    # Compute Grad-CAM heatmap
-    grayscale_cam = cam(input_tensor=image_tensor, eigen_smooth=False)[0]
-
-    # Normalize and overlay on image
-    image_np = image_tensor.squeeze().permute(1, 2, 0).cpu().detach().numpy()
-    image_np = (image_np - image_np.min()) / (image_np.max() - image_np.min())
-    heatmap = show_cam_on_image(image_np.astype(np.float32), grayscale_cam, use_rgb=True)
-
-    # Plot result
-def prepare_input(image):
-    img = np.array(image)
-    img = cv2.resize(img, (224, 224))  # Resize to 224x224
-
-    # Ensure 3-channel RGB format
-    if len(img.shape) == 2:  # If grayscale (shape: H, W)
-        img = np.stack([img] * 3, axis=-1)  # Convert to RGB (H, W, 3)
-
-    img = np.float32(img) / 255  # Normalize to [0,1]
-
-
-    #means = np.array([0.5, 0.5, 0.5])
-    #stds = np.array([0.5, 0.5, 0.5])
-    #img -= means
-    #img /= stds
-
-    img = np.ascontiguousarray(np.transpose(img, (2, 0, 1)))  # Convert to (C, H, W)
-    img = img[np.newaxis, ...]  # Add batch dimension
-    return torch.tensor(img, dtype=torch.float32, requires_grad=True)
-
-def gen_cam(image, mask):
-    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
-    heatmap = np.float32(heatmap) / 255  # Normalize heatmap
-
-    # Ensure image has 3 channels
-    if len(image.shape) == 2:  # If grayscale (H, W)
-        image = np.stack([image] * 3, axis=-1)  # Convert to (H, W, 3)
-
-    cam = (1 - 0.5) * heatmap + 0.5 * image
-    cam = cam / np.max(cam)  # Normalize
-    return np.uint8(255 * cam)  # Convert to 8-bit image
-
-
-################
-
-def preprocess_image(image, image_size=224):
-    """Load and preprocess an image."""
-    transform = transforms.Compose([
-        transforms.Resize((image_size, image_size)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    image = image.convert("RGB")
-    return transform(image).unsqueeze(0)  # Add batch dimension
-
-# Prediction function
-def predict(model_name, image):
-    print(image)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # Load the saved model checkpoint
-    checkpoint = torch.load(f"./models/{model_name}", map_location=device)
-
-    # Reconstruct Config object from the saved dictionary
-    loaded_config = Config(**checkpoint["config"])  # Convert dict back to Config
-
-    if "Vit" in model_name:
-        model = ViTPneumoniaClassifier(loaded_config)
-        vit=True
-    else:
-        model = CNNPneumoniaClassifier(loaded_config)
-        vit=False
-
-        # Load model weights
-    model.load_state_dict(checkpoint["state_dict"])
-    model.to(device)
-    model.eval()
-
-    # Preprocess the input image
-
-    # Run inference
-    if not vit:
-        image_tensor = preprocess_image(image, loaded_config.image_res).to(device)
-        with torch.no_grad():
-            output = model(image_tensor)
-        probabilities = torch.softmax(output, dim=1)
-        pred_idx = torch.argmax(probabilities, dim=1).item()
-        confidence = probabilities[0, pred_idx].item() * 100  # Convert to percentage
-        # Get prediction
-        classes = ["NORMAL", "PNEUMONIA"]
-        pred_label = classes[torch.argmax(output, dim=1).item()]
-        print(f"Prediction: {pred_label}, Confidence: {confidence:.2f}%")
-
-
-
-    # Generate Grad-CAM visualization
-    heatmap = None
-    if vit:
-        print(model)
-        target_layer = model.feature_extractor.vit.encoder.layer[-1].output
-        inputs = prepare_input(image)
-        grad_cam = GradCam(model, target_layer)
-        mask = grad_cam(inputs)  # Compute Grad-CAM mask
-
-        # Load original image for overlay
-        img = io.imread(image)
-        img = np.float32(cv2.resize(img, (loaded_config.image_res, loaded_config.image_res))) / 255
-
-        heatmap = gen_cam(img, mask)  # Generate heatmap
-
-    else:
-        # Ensure gradients are enabled
-        for param in model.parameters():
+    def generate_cam(self, image_tensor, class_idx):
+        print("[GradCamViT] Generating Grad-CAM")
+        image_tensor.requires_grad = True
+        for param in self.model.parameters():
             param.requires_grad = True
 
-        # Select the last convolutional layer dynamically
+        output = self.model(image_tensor)
+        print(f"[GradCamViT] Model output shape: {output.shape}")
+        output.retain_grad()
+        self.model.zero_grad()
+        output[:, class_idx].backward(retain_graph=True)
+        print(f"[GradCamViT] Output Gradient Min: {output.grad.min()}, Max: {output.grad.max()}")
+
+        if self.gradient is None:
+            raise RuntimeError("Gradients were not computed. Ensure the model and inputs are correct.")
+
+        batch_size, seq_len, embed_dim = self.feature.shape  # Extract shape
+        seq_len -= 1  # Exclude CLS token
+        height = width = int(seq_len ** 0.5)  # Compute square spatial shape
+
+        print(f"[GradCamViT] Reshaping to (batch, {height}, {width}, {embed_dim})")
+        self.feature = self.feature[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
+        self.gradient = self.gradient[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
+
+        weights = torch.mean(self.gradient, dim=(2, 3), keepdim=True)
+        cam = torch.sum(weights * self.feature, dim=1).squeeze().detach().cpu().numpy()
+        cam = np.maximum(cam, 0)
+        print(f"[GradCamViT] CAM min: {cam.min()}, max: {cam.max()}")
+
+        cam_min, cam_max = cam.min(), cam.max()
+        if cam_max - cam_min == 0:
+            print("⚠️ Warning: Grad-CAM has uniform activation. No meaningful heatmap generated.")
+            cam = np.zeros_like(cam)
+        else:
+            cam = (cam - cam_min) / (cam_max - cam_min)
+
+        cam = cv2.resize(cam, (image_tensor.shape[-1], image_tensor.shape[-2]))
+        return cam
+
+
+def apply_gradcam(model, image_tensor, is_vit=False):
+    print("[apply_gradcam] Applying Grad-CAM")
+    model.train()
+
+    if is_vit:
+        target_layer = model.feature_extractor.vit.encoder.layer[
+            -2].layernorm_after  # 🔄 Try using layer[-2] instead of layer[-1]
+        grad_cam = GradCamViT(model, target_layer)
+        class_idx = model(image_tensor).argmax(dim=1).item()
+        print(f"[apply_gradcam] Predicted class: {class_idx}")
+        grayscale_cam = grad_cam.generate_cam(image_tensor, class_idx)
+    else:
         target_layer = None
         for module in model.modules():
             if isinstance(module, torch.nn.Conv2d):
-                target_layer = module  # Keep overwriting to get the last Conv2D layer
-
-        if target_layer is None:
-            raise ValueError("No convolutional layers found in the model!")
-
-        # Ensure the input tensor allows gradient computation
-        image_tensor.requires_grad = True
-
-        # Initialize Grad-CAM
+                target_layer = module
         cam = GradCAM(model=model, target_layers=[target_layer])
+        grayscale_cam = cam(input_tensor=image_tensor)[0]
 
-        # Check if gradients are being recorded
-        for name, param in model.named_parameters():
-            if param.grad is None:
-                print(
-                    f"WARNING: No gradients found for {name}. Ensure the model is in train mode and doing a backward pass.")
+    print(f"[apply_gradcam] Grad-CAM min: {grayscale_cam.min()}, max: {grayscale_cam.max()}")
 
-        # Compute Grad-CAM heatmap
-        grayscale_cam = cam(input_tensor=image_tensor, eigen_smooth=False)[0]
+    grayscale_cam = (grayscale_cam - grayscale_cam.min()) / (grayscale_cam.max() - grayscale_cam.min())
+    grayscale_cam = np.uint8(255 * grayscale_cam)
 
-        # Normalize and overlay on image
-        image_np = image_tensor.squeeze().permute(1, 2, 0).cpu().detach().numpy()
-        image_np = (image_np - image_np.min()) / (image_np.max() - image_np.min())
-        heatmap = show_cam_on_image(image_np.astype(np.float32), grayscale_cam, use_rgb=True)
+    heatmap = cv2.applyColorMap(grayscale_cam, cv2.COLORMAP_JET)
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
+    image_np = image_tensor.squeeze().permute(1, 2, 0).cpu().detach().numpy()
+    image_np = (image_np - image_np.min()) / (image_np.max() - image_np.min())
+    image_np = np.uint8(255 * image_np)
 
-    # Convert Grad-CAM image to PIL format for Gradio output
-    heatmap_pil = heatmap
-
-    return f"{pred_label} -- Confidence: {confidence:.2f}%", heatmap_pil
+    overlay = cv2.addWeighted(image_np, 0.6, heatmap, 0.4, 0)
+    return Image.fromarray(overlay)
 
 
-# Gradio Interface
+print("[INFO] Grad-CAM Debugging Initialized")
+
+def preprocess_image(image, config):
+    """Preprocess input image based on the model type (ViT or CNN)."""
+    image = image.convert("RGB")
+    image = transforms.Resize((config.image_res, config.image_res))(image)
+
+    if "vit" in config.backbone_name.lower():
+        transform = transforms.Compose([
+            transforms.ToTensor()  # ✅ Only convert to tensor, no normalization
+        ])
+        image_tensor = transform(image).unsqueeze(0)
+        image_tensor = image_tensor / image_tensor.max()  # ✅ Ensure values remain in [0,1]
+    else:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        image_tensor = transform(image).unsqueeze(0)
+
+    return image_tensor
+
+
+
+
+def predict(model_name, image):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    checkpoint = torch.load(f"./models/{model_name}", map_location=device)
+    loaded_config = Config(**checkpoint["config"])
+
+    if "Vit" in model_name:
+        model = ViTPneumoniaClassifier(loaded_config)
+        is_vit = True
+    else:
+        model = CNNPneumoniaClassifier(loaded_config)
+        is_vit = False
+
+    model.load_state_dict(checkpoint["state_dict"])
+    model.to(device)
+    model.train()  # Ensure model is in training mode
+
+    image_tensor = preprocess_image(image, loaded_config).to(device)
+    image_tensor.requires_grad = True  # Ensure gradients are tracked
+
+    with torch.no_grad():
+        output = model(image_tensor)
+
+    probabilities = torch.softmax(output, dim=1)
+    pred_idx = torch.argmax(probabilities, dim=1).item()
+    confidence = probabilities[0, pred_idx].item() * 100
+    classes = ["NORMAL", "PNEUMONIA"]
+    pred_label = classes[pred_idx]
+
+    heatmap = apply_gradcam(model, image_tensor, is_vit=is_vit)
+    return f"{pred_label} -- Confidence: {confidence:.2f}%", heatmap
+
+
 gui = gr.Interface(
     fn=predict,
     inputs=[
@@ -274,7 +186,7 @@ gui = gr.Interface(
     ],
     outputs=[
         gr.Label(label="Prediction with Confidence"),
-        gr.Image(label="Grad-CAM Heatmap", width=600, height=600, container=True)
+        gr.Image(label="Grad-CAM Heatmap")
     ],
     title="Pneumonia Detection with AI",
     description="Upload a chest X-ray and select a model to classify the image. Grad-CAM will visualize the areas influencing the decision."
@@ -283,7 +195,6 @@ gui = gr.Interface(
 
 def main():
     gui.launch()
-    #predict("Vit_gradual_unfreeze_upscale_final.pt", Image.open("data/reordered/test/PNEUMONIA/person19_bacteria_61.jpeg"))
 
 
 if __name__ == "__main__":

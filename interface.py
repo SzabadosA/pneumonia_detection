@@ -14,15 +14,19 @@ from classifier import CNNPneumoniaClassifier, ViTPneumoniaClassifier
 from pytorch_grad_cam import GradCAM
 
 # Load available models from the saved directory
+DEFAULT_MODEL="ResNet50_gradual_unfreeze_final.pt"
 MODEL_DIR = "models"
-available_models = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pt")]
+AVAILABLE_MODELS = [f for f in os.listdir(MODEL_DIR) if f.endswith(".pt")]
+if DEFAULT_MODEL in AVAILABLE_MODELS:
+    AVAILABLE_MODELS.remove(DEFAULT_MODEL)
+    AVAILABLE_MODELS.insert(0, DEFAULT_MODEL)
 
 
 class GradCamViT:
     def __init__(self, model, target_layer):
         print("[GradCamViT] Initializing GradCamViT")
         self.model = model.eval()
-        self.target_layer = target_layer  # Ensure target_layer is set
+        self.target_layer = target_layer
         self.feature = None
         self.gradient = None
         self._register_hooks()
@@ -30,12 +34,12 @@ class GradCamViT:
     def _register_hooks(self):
         def forward_hook(module, input, output):
             if isinstance(output, tuple):
-                output = output[0]  # ✅ Extract the first tensor if tuple
+                output = output[0]
             self.feature = output.clone()
 
         def backward_hook(module, grad_input, grad_output):
             if isinstance(grad_output, tuple):
-                grad_output = grad_output[0]  # ✅ Extract tensor if tuple
+                grad_output = grad_output[0]
             self.gradient = grad_output.clone()
 
         self.target_layer.register_forward_hook(forward_hook)
@@ -80,7 +84,7 @@ def apply_gradcam(model, image_tensor, is_vit=False):
 
     if is_vit:
         target_layer = model.feature_extractor.vit.encoder.layer[
-            -2].layernorm_after  # 🔄 Try using layer[-2] instead of layer[-1]
+            -2].layernorm_after
         grad_cam = GradCamViT(model, target_layer)
         class_idx = model(image_tensor).argmax(dim=1).item()
         print(f"[apply_gradcam] Predicted class: {class_idx}")
@@ -108,9 +112,6 @@ def apply_gradcam(model, image_tensor, is_vit=False):
     overlay = cv2.addWeighted(image_np, 0.6, heatmap, 0.4, 0)
     return Image.fromarray(overlay)
 
-
-print("[INFO] Grad-CAM Debugging Initialized")
-
 def preprocess_image(image, config):
     """Preprocess input image based on the model type (ViT or CNN)."""
     image = image.convert("RGB")
@@ -118,10 +119,10 @@ def preprocess_image(image, config):
 
     if "vit" in config.backbone_name.lower():
         transform = transforms.Compose([
-            transforms.ToTensor()  # ✅ Only convert to tensor, no normalization
+            transforms.ToTensor()
         ])
         image_tensor = transform(image).unsqueeze(0)
-        image_tensor = image_tensor / image_tensor.max()  # ✅ Ensure values remain in [0,1]
+        image_tensor = image_tensor / image_tensor.max()
     else:
         transform = transforms.Compose([
             transforms.ToTensor(),
@@ -169,7 +170,7 @@ def predict(model_name, image):
 gui = gr.Interface(
     fn=predict,
     inputs=[
-        gr.Dropdown(choices=available_models, label="Select Model"),
+        gr.Dropdown(choices=AVAILABLE_MODELS, label="Select Model"),
         gr.Image(type="pil", label="Upload Chest X-ray")
     ],
     outputs=[

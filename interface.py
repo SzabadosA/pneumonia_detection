@@ -80,7 +80,7 @@ class GradCamViT:
 
 
 def apply_gradcam(model, image_tensor, is_vit=False):
-    model.train()
+    #model.eval()  # Ensure model is in evaluation mode
 
     if is_vit:
         target_layer = model.feature_extractor.vit.encoder.layer[
@@ -149,7 +149,7 @@ def predict(model_name, image):
 
     model.load_state_dict(checkpoint["state_dict"])
     model.to(device)
-    model.train()  # Ensure model is in training mode
+    model.eval()  # Ensure model is in training mode
 
     image_tensor = preprocess_image(image, loaded_config).to(device)
     image_tensor.requires_grad = True  # Ensure gradients are tracked

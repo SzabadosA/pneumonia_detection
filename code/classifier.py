@@ -141,6 +141,17 @@ class PneumoniaClassifier(pl.LightningModule):
         return torch.tensor(class_weights, dtype=torch.float32).to(self.device)  # Convert to tensor
 
     def save_checkpoint(self, checkpoint_path):
+        """
+        Saves the model checkpoint to a specified file path.
+
+        Args:
+            checkpoint_path (str): The file path where the checkpoint will be saved.
+
+        The checkpoint includes:
+            - Model state dictionary
+            - Configuration parameters
+            - Metadata (epoch number, training loss, validation loss)
+        """
         checkpoint = {
             "state_dict": self.state_dict(),
             "config": self.config,
@@ -154,6 +165,19 @@ class PneumoniaClassifier(pl.LightningModule):
 
     @classmethod
     def load_from_checkpoint(cls, checkpoint_path):
+        """
+         Loads a model from a saved checkpoint.
+
+         Args:
+             checkpoint_path (str): The file path to the saved checkpoint.
+
+         Returns:
+             model (cls): An instance of the model loaded with the checkpoint state.
+
+         The checkpoint should contain:
+             - 'config': The configuration parameters for the model.
+             - 'state_dict': The saved model parameters.
+         """
         checkpoint = torch.load(checkpoint_path)
         config = checkpoint['config']
         model = cls(config)
@@ -436,9 +460,23 @@ class PneumoniaClassifier(pl.LightningModule):
         return {'optimizer': optimizer, 'lr_scheduler': scheduler, 'monitor': 'val_loss'}
 
     def train_model(self):
+        """
+        Trains the model using the provided training and validation data loaders.
+
+        This function calls the trainer's `fit` method to begin model training.
+        """
         self.trainer.fit(self, self.train_loader, self.val_loader)
 
     def test_model(self, checkpoint_path):
+        """
+        Tests the model using the provided test data loader and a checkpoint.
+
+        Args:
+            checkpoint_path (str): Path to the saved model checkpoint.
+
+        Returns:
+            dict: Metadata from the checkpoint containing additional test information.
+        """
         checkpoint = torch.load(checkpoint_path, weights_only=True)
         self.trainer.test(self, self.test_loader)
         metadata = checkpoint.get("metadata", {})
@@ -621,17 +659,6 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
             overlay = cv2.addWeighted(image_np, 0.6, heatmap, 0.4, 0)
             heatmap = Image.fromarray(overlay)
 
-            ## Apply thresholding to remove low-importance regions.
-            #grayscale_cam[grayscale_cam < threshold] = 0
-#
-            ## Normalize the input image for visualization.
-            #input_image = inputs[0].permute(1, 2, 0).cpu().numpy()
-            #input_image = (input_image - input_image.min()) / (input_image.max() - input_image.min())
-            #input_image = input_image.astype(np.float32)
-#
-            ## Overlay the heatmap on the input image.
-            #heatmap = show_cam_on_image(input_image, grayscale_cam, use_rgb=True)
-
             # Display the heatmap with the corresponding label and metadata.
             plt.imshow(heatmap)
             plt.title(f"Class: {class_names[label]} - {img_name} - (Threshold: {threshold})")
@@ -643,9 +670,21 @@ class CNNPneumoniaClassifier(PneumoniaClassifier):
 
 
 #######################################################
+###############           ViT     #####################
 #######################################################
 class GradCamViT:
+    """
+    Implements Grad-CAM (Gradient-weighted Class Activation Mapping) for Vision Transformers.
+    This class registers hooks to extract features and gradients for generating attention maps.
+    """
     def __init__(self, model, target_layer):
+        """
+        Initializes the Grad-CAM for a Vision Transformer model.
+
+        Args:
+            model (torch.nn.Module): The Vision Transformer model.
+            target_layer (torch.nn.Module): The specific layer from which to extract activations.
+        """
         print("[GradCamViT] Initializing GradCamViT")
         self.model = model.eval()
         self.target_layer = target_layer  # Ensure target_layer is set
@@ -654,20 +693,33 @@ class GradCamViT:
         self._register_hooks()
 
     def _register_hooks(self):
+        """
+        Registers forward and backward hooks to capture features and gradients.
+        """
         def forward_hook(module, input, output):
             if isinstance(output, tuple):
-                output = output[0]  # ✅ Extract the first tensor if tuple
+                output = output[0]  # Extract the first tensor if tuple
             self.feature = output.clone()
 
         def backward_hook(module, grad_input, grad_output):
             if isinstance(grad_output, tuple):
-                grad_output = grad_output[0]  # ✅ Extract tensor if tuple
+                grad_output = grad_output[0]  # Extract tensor if tuple
             self.gradient = grad_output.clone()
 
         self.target_layer.register_forward_hook(forward_hook)
         self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate_cam(self, image_tensor, class_idx):
+        """
+        Generates a Grad-CAM heatmap for a given image tensor and class index.
+
+        Args:
+            image_tensor (torch.Tensor): The input image tensor.
+            class_idx (int): The class index for which the Grad-CAM is computed.
+
+        Returns:
+            np.ndarray: The computed Grad-CAM heatmap.
+        """
         image_tensor.requires_grad = True
         for param in self.model.parameters():
             param.requires_grad = True
@@ -680,6 +732,7 @@ class GradCamViT:
         if self.gradient is None:
             raise RuntimeError("Gradients were not computed. Ensure the model and inputs are correct.")
 
+        # Extract dimensions and reshape feature maps for visualization
         batch_size, seq_len, embed_dim = self.feature.shape  # Extract shape
         seq_len -= 1  # Exclude CLS token
         height = width = int(seq_len ** 0.5)  # Compute square spatial shape
@@ -687,21 +740,34 @@ class GradCamViT:
         self.feature = self.feature[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
         self.gradient = self.gradient[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
 
+        # Compute Grad-CAM weighted sum
         weights = torch.mean(self.gradient, dim=(2, 3), keepdim=True)
         cam = torch.sum(weights * self.feature, dim=1).squeeze().detach().cpu().numpy()
         cam = np.maximum(cam, 0)
 
+        # Normalize heatmap
         cam_min, cam_max = cam.min(), cam.max()
         if cam_max - cam_min == 0:
             cam = np.zeros_like(cam)
         else:
             cam = (cam - cam_min) / (cam_max - cam_min)
 
+        # Resize the heatmap to match the input image dimensions
         cam = cv2.resize(cam, (image_tensor.shape[-1], image_tensor.shape[-2]))
         return cam
 
 class ViTPneumoniaClassifier(PneumoniaClassifier):
+    """
+    Vision Transformer (ViT) based pneumonia classifier.
+    This class extends the PneumoniaClassifier and adapts the Vision Transformer for image classification.
+    """
     def __init__(self, config):
+        """
+        Initializes the ViT-based pneumonia classifier.
+
+        Args:
+            config (Config): Configuration object containing model parameters.
+        """
         super().__init__(config)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.processor = ViTImageProcessor.from_pretrained(config.backbone_name)
@@ -711,12 +777,20 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
         self.feature_extractor.classifier = nn.Identity()
         self.classifier = nn.Linear(self.feature_extractor.config.hidden_size, 2)
         self.vit_layers = list(self.feature_extractor.vit.encoder.layer)
+        # Freeze the pre-trained layers if transfer learning is enabled
         if config.transfer_learning:
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
         self.to(device)
 
     def forward(self, x):
+        """
+        Forward pass for the ViT pneumonia classifier
+        Args:
+            x (torch.Tensor or PIL.Image): Input image tensor or PIL image
+        Returns:
+            torch.Tensor: Logits representing class predictions.
+        """
         if x.dim() == 4:
             processed_x = x.to(self.device)
         else:
@@ -727,12 +801,30 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
         return logits
 
     def get_vit_target_layer(self, layer_index=None):
+        """
+        Retrieves the target Vision Transformer layer for Grad-CAM visualization.
+
+        Args:
+            layer_index (int, optional): Index of the target layer.
+
+        Returns:
+            torch.nn.Module: The specified layer's normalization component.
+        """
         return self.feature_extractor.vit.encoder.layer[layer_index].layernorm_after
 
     def visualize_gradcam(self, image_tensor=None, num_samples=None, target_layer_index=None, class_names=None,
                           threshold=0.5):
-        #if target_layer_index is None:
-        #    target_layer_index = len(self.vit_layers) - 1
+        """
+        Generates and displays Grad-CAM visualizations for a given image or dataset.
+
+        Args:
+            image_tensor (torch.Tensor, optional): Single image tensor for visualization. If None, dataset-based visualization is used.
+            num_samples (int, optional): Number of random samples to visualize from the dataset when `image_tensor` is None.
+            target_layer_index (int, optional): Index of the target layer for Grad-CAM computation.
+            class_names (list, optional): List of class names for labeling the visualizations.
+            threshold (float, optional): Threshold to filter Grad-CAM heatmap values, keeping only high-importance regions.
+        """
+
         target_layer = self.get_vit_target_layer(layer_index=target_layer_index)
         gradcam = GradCamViT(self, target_layer)
         class_names = ["Normal", "Pneumonia"]  # Example class names.
@@ -845,6 +937,16 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
 
 
     def preprocess_image(image_path, image_size=224):
+        """
+        Loads and preprocesses an image for model inference.
+
+        Args:
+            image_path (str): Path to the input image.
+            image_size (int, optional): Target image size. Default is 224.
+
+        Returns:
+            torch.Tensor: Preprocessed image tensor.
+        """
         image = Image.open(image_path).convert("RGB")
         transform = transforms.Compose([
             transforms.Resize((image_size, image_size)),
@@ -857,6 +959,31 @@ class ViTPneumoniaClassifier(PneumoniaClassifier):
 
 
 class Config:
+    """
+    Configuration class for defining model hyperparameters and settings.
+
+    Attributes:
+        backbone_name (str): Name of the backbone model.
+        transfer_learning (bool): Whether to use transfer learning.
+        learning_rate (float): Learning rate for training.
+        batch_size (int): Number of samples per batch.
+        max_epochs (int): Maximum number of epochs for training.
+        weight_decay (float): Regularization parameter for optimizer.
+        dropout (float): Dropout rate for regularization.
+        num_workers (int): Number of workers for data loading.
+        model_name (str): Name of the model.
+        version (str): Model version.
+        optimizer_name (str): Name of the optimizer.
+        use_class_weights (bool): Whether to use class weights.
+        image_res (int): Resolution of input images.
+        patience (int): Patience for early stopping.
+        image_type (str): Type of image input (e.g., 'RGB').
+        frozen_lr (float, optional): Learning rate for frozen layers (if applicable).
+        unfrozen_lr (float, optional): Learning rate for unfrozen layers (if applicable).
+        unfreeze_interval (int, optional): Interval at which layers are unfrozen.
+        num_layers_to_unfreeze (int, optional): Number of layers to gradually unfreeze.
+        gradually_unfreeze (bool): Whether to gradually unfreeze layers.
+    """
     def __init__(
             self,
             backbone_name,

@@ -7,7 +7,12 @@ To comprehensively evaluate model performance, metrics including Accuracy, F1-Sc
 
 The ultimate goal is to build a robust and adaptable classifier written with Pytorch Lightning, capable of reliably distinguishing between healthy lungs and pneumonia-affected lungs. This project underscores the potential of deep learning models in advancing medical image analysis and supporting radiologists in early disease diagnosis through systematic model comparison and explainability.
 
-![Description of Image](misc/plotresults.PNG)
+![Prediction Results](misc/plotresults.PNG)
+
+### Gradio Interface for User-Friendly Inference
+A **Gradio** web interface has been built to provide a simple and interactive way to use the pneumonia detection model. Users can upload their chest X-ray images and receive predictions with confidence scores. The interface also includes **Grad-CAM visualizations**, offering insights into the areas of the image that influenced the model’s decision. This tool makes AI-driven pneumonia detection more accessible for researchers and healthcare professionals.
+
+![Gradio interface](misc/gradio.PNG)
 
 # Dataset
 The project is based on the public chest-xray-pneumonia kaggle dataset:
@@ -36,7 +41,7 @@ This project provides a machine learning-based pneumonia detection system. Follo
 
 ---
 
-## 🚀 Installation Guide
+## Installation Guide
 
 ### **1. Prerequisites**
 Ensure you have the following installed:
@@ -108,30 +113,27 @@ python interface.py
 
 ---
 
-## **📄 Project Structure**
+## Project Structure
 ```
 pneumonia-detection/
+│── Research_Report.pdf    # Project Research Report
 │── interface.py           # Main entry point for running the interface
-│── pyproject.toml         # Project metadata and dependencies
+│── install.py             # Install Script for dependencies
 │── README.md              # This file
-│── code_pn/               # Source code
-│   ├── model.py           # Model definition
-│   ├── dataset.py         # Dataset loader
-│   ├── train.py           # Training script
-│   ├── predict.py         # Inference script
-│   └── __init__.py        # Marks code_pn as a package
-│── data/                  # (Optional) Dataset folder
-│── models/                # (Optional) Saved models
+│── checkpoints/           # (To be downloaded) Training checkpoints
+│── code/                  # Source code
+│── data/                  # (To be downloaded) Dataset folder
+│── misc/                  # Readme Image Files
+│── models/                # (To be downloaded) Saved models
 │── notebooks/             # Jupyter notebooks for exploration
-│── checkpoints/           # Training checkpoints
 ```
 
 ---
 
-## **🎯 Next Steps**
-- ✅ Run Interface for Pneumonia Classification and start exploring the pretrained models: `python interface.py`
-- ✅ Explore Notebooks: The source code for all provided models can be found in their dedicated notebooks in `./notebooks/`
-
+## **Next Steps**
+- Run Interface for Pneumonia Classification and start exploring the pretrained models: `python interface.py`
+- Explore Notebooks: The source code for all provided models can be found in their dedicated notebooks in `./notebooks/`
+- Explore the Research Report
 ---
 
 ## **💌 Contact**

@@ -15,10 +15,11 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
     with open(notebook_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
     # Clear all outputs
-    #for cell in nb['cells']:
-    #    if cell['cell_type'] == 'code':
-    #        cell['outputs'] = []
-    #        cell['execution_count'] = None
+    if "vit" in notebook_path:
+        for cell in nb['cells']:
+            if cell['cell_type'] == 'code':
+                cell['outputs'] = []
+                cell['execution_count'] = None
     # Execute the notebook with kernel restart
     client = NotebookClient(nb, timeout=timeout, kernel_name='python3', restart_kernel=True)
     try:
@@ -27,10 +28,11 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
         print(f"Error executing {notebook_path}: {e}")
 
     # Clear all outputs
-    #for cell in nb['cells']:
-    #    if cell['cell_type'] == 'code':
-    #        cell['outputs'] = []
-    #        cell['execution_count'] = None
+    if "vit" in notebook_path:
+        for cell in nb['cells']:
+            if cell['cell_type'] == 'code':
+                cell['outputs'] = []
+                cell['execution_count'] = None
 
     # Save the cleared notebook
     if output_path is None:
@@ -58,14 +60,11 @@ notebooks = [
     "../notebooks/Resnet50_gradual_unfreeze.ipynb",
     "../notebooks/Resnet50_premult.ipynb",
     "../notebooks/Resnet50_unfreeze.ipynb",
-    "../notebooks/ViT_premult.ipynb",
-    "../notebooks/ViT_unfreeze.ipynb",
-    "../notebooks/ViT_unfreeze_gradual.ipynb",
-    "../notebooks/ViT_unfreeze_gradual_upscale.ipynb"
+    "../notebooks/vit-base-patch16-224.ipynb",
+    "../notebooks/vit-large-patch16-384.ipynb",
+    "../notebooks/vit-large-patch32-384.ipynb"
 ]
-notebooks = [
-    "../notebooks/DenseNet131_gradual_unfreeze.ipynb",
-]
+
 
 # Execute each notebook with kernel restart
 for notebook in notebooks:

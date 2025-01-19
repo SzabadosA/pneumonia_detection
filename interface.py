@@ -23,6 +23,8 @@ if DEFAULT_MODEL in AVAILABLE_MODELS:
 
 
 class GradCamViT:
+    """Class for computing Grad-CAM visualizations for Vision Transformer models."""
+
     def __init__(self, model, target_layer):
         print("[GradCamViT] Initializing GradCamViT")
         self.model = model.eval()
@@ -32,6 +34,8 @@ class GradCamViT:
         self._register_hooks()
 
     def _register_hooks(self):
+        """Registers forward and backward hooks to capture activations and gradients."""
+
         def forward_hook(module, input, output):
             if isinstance(output, tuple):
                 output = output[0]
@@ -46,6 +50,8 @@ class GradCamViT:
         self.target_layer.register_full_backward_hook(backward_hook)
 
     def generate_cam(self, image_tensor, class_idx):
+        """Generates Grad-CAM heatmap for a given class index."""
+
         image_tensor.requires_grad = True
         for param in self.model.parameters():
             param.requires_grad = True
@@ -58,17 +64,21 @@ class GradCamViT:
         if self.gradient is None:
             raise RuntimeError("Gradients were not computed. Ensure the model and inputs are correct.")
 
+        # Extract shape and compute spatial dimensions
         batch_size, seq_len, embed_dim = self.feature.shape  # Extract shape
         seq_len -= 1  # Exclude CLS token
         height = width = int(seq_len ** 0.5)  # Compute square spatial shape
 
+        # Reshape feature maps and gradients for Grad-CAM computation
         self.feature = self.feature[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
         self.gradient = self.gradient[:, 1:, :].reshape(batch_size, height, width, embed_dim).permute(0, 3, 1, 2)
 
+        # Compute Grad-CAM heatmap
         weights = torch.mean(self.gradient, dim=(2, 3), keepdim=True)
         cam = torch.sum(weights * self.feature, dim=1).squeeze().detach().cpu().numpy()
         cam = np.maximum(cam, 0)
 
+        # Normalize heatmap
         cam_min, cam_max = cam.min(), cam.max()
         if cam_max - cam_min == 0:
             cam = np.zeros_like(cam)
@@ -80,9 +90,10 @@ class GradCamViT:
 
 
 def apply_gradcam(model, image_tensor, is_vit=False):
-    #model.eval()  # Ensure model is in evaluation mode
+    """Applies Grad-CAM to a given model and image tensor."""
 
     if is_vit:
+        # Select appropriate target layer for ViT models
         target_layer = model.feature_extractor.vit.encoder.layer[
             -3].layernorm_after
         grad_cam = GradCamViT(model, target_layer)
@@ -90,6 +101,7 @@ def apply_gradcam(model, image_tensor, is_vit=False):
         print(f"[apply_gradcam] Predicted class: {class_idx}")
         grayscale_cam = grad_cam.generate_cam(image_tensor, class_idx)
     else:
+        # Select the last convolutional layer for CNN models
         target_layer = None
         for module in model.modules():
             if isinstance(module, torch.nn.Conv2d):
@@ -99,12 +111,14 @@ def apply_gradcam(model, image_tensor, is_vit=False):
 
     print(f"[apply_gradcam] Grad-CAM min: {grayscale_cam.min()}, max: {grayscale_cam.max()}")
 
+    # Normalize and apply colormap to heatmap
     grayscale_cam = (grayscale_cam - grayscale_cam.min()) / (grayscale_cam.max() - grayscale_cam.min())
     grayscale_cam = np.uint8(255 * grayscale_cam)
 
     heatmap = cv2.applyColorMap(grayscale_cam, cv2.COLORMAP_JET)
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
+    # Overlay heatmap on original image
     image_np = image_tensor.squeeze().permute(1, 2, 0).cpu().detach().numpy()
     image_np = (image_np - image_np.min()) / (image_np.max() - image_np.min())
     image_np = np.uint8(255 * image_np)
@@ -117,6 +131,7 @@ def preprocess_image(image, config):
     image = image.convert("RGB")
     image = transforms.Resize((config.image_res, config.image_res))(image)
 
+    # Apply appropriate transformations for model type
     if "vit" in config.backbone_name.lower():
         transform = transforms.Compose([
             transforms.ToTensor()
@@ -132,14 +147,13 @@ def preprocess_image(image, config):
 
     return image_tensor
 
-
-
-
 def predict(model_name, image):
+    """Predict pneumonia classification and generate Grad-CAM heatmap."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(f"./models/{model_name}", map_location=device)
     loaded_config = Config(**checkpoint["config"])
 
+    # Load model based on type
     if "Vit" in model_name:
         model = ViTPneumoniaClassifier(loaded_config)
         is_vit = True
@@ -158,6 +172,7 @@ def predict(model_name, image):
     with torch.no_grad():
         output = model(image_tensor)
 
+    # Compute prediction and confidence score
     probabilities = torch.softmax(output, dim=1)
     pred_idx = torch.argmax(probabilities, dim=1).item()
     confidence = probabilities[0, pred_idx].item() * 100

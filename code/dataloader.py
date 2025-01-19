@@ -3,6 +3,18 @@ from PIL import Image
 import os
 
 class PneumoniaDataset(Dataset):
+    """
+    Custom dataset for loading pneumonia classification images.
+
+    This dataset loads images from a directory structure where images are
+    stored in subdirectories named according to their class labels (e.g.,
+    'PNEUMONIA' and 'NORMAL').
+
+    Args:
+        root_dir (str): Root directory containing class subdirectories.
+        transform (callable, optional): A function/transform to apply to the images.
+        resolution (int, optional): Image resolution for resizing (default: 256).
+    """
     def __init__(self, root_dir, transform=None, resolution=256):
         self.root_dir = root_dir
         self.transform = transform

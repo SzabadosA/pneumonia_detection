@@ -1,0 +1,21 @@
+config: !!python/object:code.classifier.Config
+  backbone_name: resnet18
+  batch_size: 20
+  dropout: 0.2
+  frozen_lr: 1.0e-06
+  gradually_unfreeze: true
+  image_res: 224
+  image_type: 3
+  learning_rate: 0.0001
+  max_epochs: 50
+  model_name: ResNet18_gradual_unfreeze
+  num_layers_to_unfreeze: 2
+  num_workers: 16
+  optimizer_name: sgd
+  patience: 10
+  transfer_learning: false
+  unfreeze_interval: 5
+  unfrozen_lr: 1.0e-05
+  use_class_weights: true
+  version: '001'
+  weight_decay: 0.0001

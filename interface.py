@@ -150,6 +150,7 @@ def predict(model_name, image):
     model.load_state_dict(checkpoint["state_dict"])
     model.to(device)
     model.eval()  # Ensure model is in training mode
+    width, height = image.size
 
     image_tensor = preprocess_image(image, loaded_config).to(device)
     image_tensor.requires_grad = True  # Ensure gradients are tracked
@@ -164,6 +165,7 @@ def predict(model_name, image):
     pred_label = classes[pred_idx]
 
     heatmap = apply_gradcam(model, image_tensor, is_vit=is_vit)
+    heatmap = heatmap.resize((width, height))
     return f"{pred_label} -- Confidence: {confidence:.2f}%", heatmap
 
 

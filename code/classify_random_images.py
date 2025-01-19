@@ -33,8 +33,8 @@ def plot_random_images_with_labels(model, dataloader, num_images=20, seed=42):
         # Retrieve the raw image, label, and filename
         img, label, filename = dataset[idx]
         filename = filename.replace("\\", "/")
-        parts = filename.split('/', 3)
-        formatted_filename = f"{parts[0]}/{parts[1]}/{parts[2]}/\n{parts[3]}"
+        parts = filename.split('/')
+        formatted_filename = "/".join(parts[-3:])
 
         # Convert to batch format for prediction
         img_batch = img.unsqueeze(0).to(model.device)

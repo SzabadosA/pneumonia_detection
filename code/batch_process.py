@@ -15,10 +15,10 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
     with open(notebook_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
     # Clear all outputs
-    for cell in nb['cells']:
-        if cell['cell_type'] == 'code_pn':
-            cell['outputs'] = []
-            cell['execution_count'] = None
+    #for cell in nb['cells']:
+    #    if cell['cell_type'] == 'code':
+    #        cell['outputs'] = []
+    #        cell['execution_count'] = None
     # Execute the notebook with kernel restart
     client = NotebookClient(nb, timeout=timeout, kernel_name='python3', restart_kernel=True)
     try:
@@ -27,10 +27,10 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
         print(f"Error executing {notebook_path}: {e}")
 
     # Clear all outputs
-    for cell in nb['cells']:
-        if cell['cell_type'] == 'code_pn':
-            cell['outputs'] = []
-            cell['execution_count'] = None
+    #for cell in nb['cells']:
+    #    if cell['cell_type'] == 'code':
+    #        cell['outputs'] = []
+    #        cell['execution_count'] = None
 
     # Save the cleared notebook
     if output_path is None:
@@ -39,16 +39,32 @@ def execute_notebook_with_kernel_restart(notebook_path, output_path=None, timeou
         nbformat.write(nb, f)
     print(f"Executed and cleared notebook saved to {output_path}")
 
-
 notebooks = [
-
-    "../notebooks/Resnet50_gradual_unfreeze.ipynb",
-    "../notebooks/DenseNet131_unfreeze.ipynb",
     "../notebooks/DenseNet131_gradual_unfreeze.ipynb",
     "../notebooks/DenseNet131_premult.ipynb",
+    "../notebooks/DenseNet131_unfreeze.ipynb",
+    "../notebooks/EfficientNet_gradual_unfreeze.ipynb",
+    "../notebooks/EfficientNet_premult.ipynb",
+    "../notebooks/EfficientNet_unfreeze.ipynb",
+    "../notebooks/Resnet18_equalized.ipynb",
+    "../notebooks/Resnet18_gradual_unfreeze.ipynb",
+    "../notebooks/Resnet18_premult.ipynb",
+    "../notebooks/Resnet18_raw.ipynb",
+    "../notebooks/Resnet18_reordered.ipynb",
+    "../notebooks/Resnet18_reordered_weighted.ipynb",
+    "../notebooks/Resnet18_unfreeze.ipynb",
+    "../notebooks/Resnet18_upscale.ipynb",
+    "../notebooks/Resnet18_upscale_unfreeze.ipynb",
+    "../notebooks/Resnet50_gradual_unfreeze.ipynb",
+    "../notebooks/Resnet50_premult.ipynb",
+    "../notebooks/Resnet50_unfreeze.ipynb",
     "../notebooks/ViT_premult.ipynb",
     "../notebooks/ViT_unfreeze.ipynb",
     "../notebooks/ViT_unfreeze_gradual.ipynb",
+    "../notebooks/ViT_unfreeze_gradual_upscale.ipynb"
+]
+notebooks = [
+    "../notebooks/DenseNet131_gradual_unfreeze.ipynb",
 ]
 
 # Execute each notebook with kernel restart

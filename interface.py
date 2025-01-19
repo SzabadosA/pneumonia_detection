@@ -84,7 +84,7 @@ def apply_gradcam(model, image_tensor, is_vit=False):
 
     if is_vit:
         target_layer = model.feature_extractor.vit.encoder.layer[
-            -2].layernorm_after
+            -3].layernorm_after
         grad_cam = GradCamViT(model, target_layer)
         class_idx = model(image_tensor).argmax(dim=1).item()
         print(f"[apply_gradcam] Predicted class: {class_idx}")

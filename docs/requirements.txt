@@ -3,3 +3,4 @@ sphinx_rtd_theme
 nbsphinx
 ipykernel  # Required for Jupyter notebooks
 pandoc  # Sometimes needed for Jupyter notebook conversion
+-e .

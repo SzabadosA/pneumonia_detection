@@ -8,8 +8,15 @@
 import os
 import sys
 
-# Ensure Sphinx can find your code
-sys.path.insert(0, os.path.abspath("../.."))  # Adjust this if needed
+# Debugging: Print path to check in logs
+print("Current Working Directory:", os.getcwd())
+print("Available Files:", os.listdir(os.getcwd()))
+
+# Ensure Sphinx can find your package
+sys.path.insert(0, os.path.abspath("../../pneumonia_detection"))  # Adjust as needed
+
+# Another option if your modules are inside "code/"
+sys.path.insert(0, os.path.abspath("../../code"))
 
 project = 'Pneumonia Detection'
 copyright = '2025, Alexander Szabados'

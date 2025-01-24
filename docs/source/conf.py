@@ -17,6 +17,9 @@ sys.path.insert(0, os.path.abspath("../../pneumonia_detection"))  # Adjust as ne
 
 # Another option if your modules are inside "code/"
 sys.path.insert(0, os.path.abspath("../../code"))
+print("@@PYTHONPATH")
+for r in sys.path:
+    print(r)
 
 project = 'Pneumonia Detection'
 copyright = '2025, Alexander Szabados'

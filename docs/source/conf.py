@@ -11,12 +11,15 @@ import sys
 # Debugging: Print path to check in logs
 print("Current Working Directory:", os.getcwd())
 print("Available Files:", os.listdir(os.getcwd()))
+directory_path = '/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest'
 
-# Ensure Sphinx can find your package
-sys.path.insert(0, os.path.abspath("../../pneumonia_detection"))  # Adjust as needed
+# List all files in the directory
+for root, dirs, files in os.walk(directory_path):
+    for filename in files:
+        file_path = os.path.join(root, filename)
+        if os.path.isfile(file_path):
+            print(file_path)
 
-# Another option if your modules are inside "code/"
-sys.path.insert(0, os.path.abspath("../../code"))
 print("@@PYTHONPATH")
 for r in sys.path:
     print(r)

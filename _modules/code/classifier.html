@@ -1,0 +1,1274 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>code.classifier &mdash; Pneumonia Detection 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Pneumonia Detection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.classifier.html">code.classifier module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.project_globals.html">code.project_globals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.plot_random_image.html">code.plot_random_image module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.classify_random_images.html">code.classify_random_images module</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Jupyter Notebooks:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../preprocessing.html">Preprocessing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Training_Structure.html">Training Structure</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Pneumonia Detection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">code.classifier</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for code.classifier</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytorch_lightning</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchmetrics.classification</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accuracy</span><span class="p">,</span> <span class="n">Precision</span><span class="p">,</span> <span class="n">Recall</span><span class="p">,</span> <span class="n">F1Score</span><span class="p">,</span> <span class="n">Specificity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReduceLROnPlateau</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_lightning.callbacks.early_stopping</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_lightning.loggers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TensorBoardLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">code.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">PneumoniaDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">code.custom_checkpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">CustomModelCheckpoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ViTForImageClassification</span><span class="p">,</span> <span class="n">ViTImageProcessor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_grad_cam</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradCAM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_grad_cam.utils.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_cam_on_image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_grad_cam</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradCAM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_grad_cam.utils.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_cam_on_image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+
+<div class="viewcode-block" id="make_square">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.make_square">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_square</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pads the image to make it square, preserving the original content.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        image (PIL.Image): The input image to be processed.</span>
+<span class="sd">        fill (int or tuple): The fill color for padding (default is black or 0).</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        PIL.Image: The padded square image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># Extract the width and height of the image</span>
+    <span class="n">max_side</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>  <span class="c1"># Determine the largest side to calculate padding</span>
+    <span class="n">pad_left</span> <span class="o">=</span> <span class="p">(</span><span class="n">max_side</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># Calculate padding for the left side</span>
+    <span class="n">pad_top</span> <span class="o">=</span> <span class="p">(</span><span class="n">max_side</span> <span class="o">-</span> <span class="n">h</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># Calculate padding for the top</span>
+    <span class="n">pad_right</span> <span class="o">=</span> <span class="n">max_side</span> <span class="o">-</span> <span class="n">w</span> <span class="o">-</span> <span class="n">pad_left</span>  <span class="c1"># Calculate padding for the right side</span>
+    <span class="n">pad_bottom</span> <span class="o">=</span> <span class="n">max_side</span> <span class="o">-</span> <span class="n">h</span> <span class="o">-</span> <span class="n">pad_top</span>  <span class="c1"># Calculate padding for the bottom</span>
+    <span class="c1"># Add padding to make the image square</span>
+    <span class="k">return</span> <span class="n">transforms</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">pad_left</span><span class="p">,</span> <span class="n">pad_top</span><span class="p">,</span> <span class="n">pad_right</span><span class="p">,</span> <span class="n">pad_bottom</span><span class="p">),</span> <span class="n">fill</span><span class="o">=</span><span class="n">fill</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PneumoniaClassifier">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PneumoniaClassifier</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">LightningModule</span><span class="p">):</span>
+
+<div class="viewcode-block" id="PneumoniaClassifier.__init__">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A base classifier for pneumonia detection built using PyTorch Lightning.</span>
+
+<span class="sd">        This class serves as a flexible framework to experiment with different deep learning architectures,</span>
+<span class="sd">        including CNNs and Vision Transformers, for binary classification tasks. It integrates data loaders,</span>
+<span class="sd">        training, evaluation, and model checkpointing functionalities. It also supports class weighting for</span>
+<span class="sd">        imbalanced datasets and gradual unfreezing for transfer learning.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            config (object): Configuration containing model hyperparameters.</span>
+<span class="sd">            accuracy (torchmetrics.Metric): Binary classification accuracy metric.</span>
+<span class="sd">            precision (torchmetrics.Metric): Binary classification precision metric.</span>
+<span class="sd">            recall (torchmetrics.Metric): Binary classification recall metric.</span>
+<span class="sd">            f1 (torchmetrics.Metric): F1 score for binary classification.</span>
+<span class="sd">            specificity (torchmetrics.Metric): Specificity metric to measure true negative rate.</span>
+<span class="sd">            currently_unfrozen (int): Counter for layers unfrozen during gradual unfreezing.</span>
+<span class="sd">            train_loader (DataLoader): DataLoader for training data.</span>
+<span class="sd">            val_loader (DataLoader): DataLoader for validation data.</span>
+<span class="sd">            test_loader (DataLoader): DataLoader for testing data.</span>
+<span class="sd">            gradcam_loader (DataLoader): DataLoader for Grad-CAM visualization data.</span>
+<span class="sd">            class_weights (torch.Tensor): Tensor of class weights for handling imbalanced datasets.</span>
+<span class="sd">            checkpoint_callback (CustomModelCheckpoint): Callback for saving the best model checkpoint.</span>
+<span class="sd">            early_stopping_callback (EarlyStopping): Callback to stop training when validation loss stops improving.</span>
+<span class="sd">            trainer (pl.Trainer): PyTorch Lightning Trainer instance for managing training and evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>  <span class="c1"># Initialize the base LightningModule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>  <span class="c1"># Configuration object containing hyperparameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_hyperparameters</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;backbone&#39;</span><span class="p">])</span>  <span class="c1"># Save hyperparameters for reproducibility</span>
+
+        <span class="c1"># Define metrics for model evaluation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">=</span> <span class="n">Accuracy</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>  <span class="c1"># Binary accuracy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">Precision</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>  <span class="c1"># Precision metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span> <span class="o">=</span> <span class="n">Recall</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>  <span class="c1"># Recall metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span> <span class="o">=</span> <span class="n">F1Score</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>  <span class="c1"># F1 score metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span> <span class="o">=</span> <span class="n">Specificity</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)</span>  <span class="c1"># Specificity metric for imbalanced datasets</span>
+
+        <span class="c1"># Tracker for transfer learning (gradual unfreezing of layers)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currently_unfrozen</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Tracks how many layers are currently unfrozen</span>
+
+        <span class="c1"># Create data loaders and compute class weights if necessary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradcam_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dataloaders</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">use_class_weights</span><span class="p">:</span>  <span class="c1"># Check if class weighting is enabled</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_class_weights</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># Compute and move to the appropriate device</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># No class weights if not specified</span>
+
+        <span class="c1"># Define callbacks for checkpointing and early stopping</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_callback</span> <span class="o">=</span> <span class="n">CustomModelCheckpoint</span><span class="p">(</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span>  <span class="c1"># Monitor validation loss</span>
+            <span class="n">dirpath</span><span class="o">=</span><span class="s1">&#39;../checkpoints&#39;</span><span class="p">,</span>  <span class="c1"># Directory to save checkpoints</span>
+            <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>  <span class="c1"># Model filename</span>
+            <span class="n">save_top_k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Save the best model</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;min&#39;</span>  <span class="c1"># Minimize validation loss</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_callback</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span>  <span class="c1"># Monitor validation loss</span>
+            <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>  <span class="c1"># Number of epochs to wait before stopping</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Enable verbose logging</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;min&#39;</span>  <span class="c1"># Stop when validation loss stops decreasing</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize the Lightning Trainer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Trainer</span><span class="p">(</span>
+            <span class="n">max_epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">,</span>  <span class="c1"># Maximum number of epochs</span>
+            <span class="n">accelerator</span><span class="o">=</span><span class="s2">&quot;gpu&quot;</span><span class="p">,</span>  <span class="c1"># Use GPU if available</span>
+            <span class="n">devices</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Number of devices (GPUs) to use</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">TensorBoardLogger</span><span class="p">(</span><span class="s2">&quot;tb_logs&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_name</span><span class="p">),</span>  <span class="c1"># Log metrics to TensorBoard</span>
+            <span class="n">log_every_n_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># Log every 10 steps</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_callback</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_callback</span><span class="p">],</span>  <span class="c1"># Add callbacks</span>
+            <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;16-mixed&#39;</span><span class="p">,</span>  <span class="c1"># Use mixed precision for faster training</span>
+            <span class="n">accumulate_grad_batches</span><span class="o">=</span><span class="mi">1</span>  <span class="c1"># Accumulate gradients across batches</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.unfreeze_next_layers">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.unfreeze_next_layers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unfreeze_next_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_layers_to_unfreeze</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.get_vit_target_layer">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.get_vit_target_layer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vit_target_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.compute_class_weights">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.compute_class_weights">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_class_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes class weights to handle imbalanced datasets.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Tensor of class weights.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">class_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>  <span class="c1"># Count occurrences of each class</span>
+        <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">class_counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>  <span class="c1"># Total number of samples</span>
+        <span class="c1"># Compute weights: total samples divided by the number of samples for each class</span>
+        <span class="n">class_weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">total_samples</span> <span class="o">/</span> <span class="n">class_counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_counts</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">class_weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># Convert to tensor</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.save_checkpoint">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.save_checkpoint">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the model checkpoint to a specified file path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            checkpoint_path (str): The file path where the checkpoint will be saved.</span>
+
+<span class="sd">        The checkpoint includes:</span>
+<span class="sd">            - Model state dictionary</span>
+<span class="sd">            - Configuration parameters</span>
+<span class="sd">            - Metadata (epoch number, training loss, validation loss)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;state_dict&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;epoch&quot;</span><span class="p">:</span> <span class="n">current_epoch</span><span class="p">,</span>
+                <span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="n">train_loss</span><span class="p">,</span>
+                <span class="s2">&quot;val_loss&quot;</span><span class="p">:</span> <span class="n">val_loss</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.load_from_checkpoint">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.load_from_checkpoint">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_checkpoint</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Loads a model from a saved checkpoint.</span>
+
+<span class="sd">         Args:</span>
+<span class="sd">             checkpoint_path (str): The file path to the saved checkpoint.</span>
+
+<span class="sd">         Returns:</span>
+<span class="sd">             model (cls): An instance of the model loaded with the checkpoint state.</span>
+
+<span class="sd">         The checkpoint should contain:</span>
+<span class="sd">             - &#39;config&#39;: The configuration parameters for the model.</span>
+<span class="sd">             - &#39;state_dict&#39;: The saved model parameters.</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;state_dict&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.identity_transform">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.identity_transform">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">identity_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.create_transforms">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.create_transforms">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.create_dataloaders">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.create_dataloaders">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_dataloaders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates data loaders for training, validation, and testing.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: DataLoader objects for train, validation, test, and Grad-CAM datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">train_transform</span><span class="p">,</span> <span class="n">val_transform</span><span class="p">,</span> <span class="n">test_transform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_transforms</span><span class="p">()</span>  <span class="c1"># Get preprocessing transforms</span>
+
+        <span class="c1"># Get the absolute path to the `data` folder</span>
+        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">))</span>
+
+        <span class="c1"># Define mapping for image types</span>
+        <span class="n">image_type_mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;reordered&quot;</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;equalized&quot;</span><span class="p">,</span>
+            <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;premultiplied&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Get dataset folder name based on image_type</span>
+        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">image_type_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dataset_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid image_type </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_type</span><span class="si">}</span><span class="s2">. Expected values: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">image_type_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Construct absolute dataset paths</span>
+        <span class="n">train_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">)</span>
+        <span class="n">val_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
+        <span class="n">test_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">dataset_type</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Validate dataset paths</span>
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="p">[</span><span class="n">train_folder</span><span class="p">,</span> <span class="n">val_folder</span><span class="p">,</span> <span class="n">test_folder</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset folder not found: </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create datasets</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">PneumoniaDataset</span><span class="p">(</span><span class="n">root_dir</span><span class="o">=</span><span class="n">train_folder</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">train_transform</span><span class="p">,</span>
+                                         <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)</span>
+        <span class="n">val_dataset</span> <span class="o">=</span> <span class="n">PneumoniaDataset</span><span class="p">(</span><span class="n">root_dir</span><span class="o">=</span><span class="n">val_folder</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">val_transform</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)</span>
+        <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">PneumoniaDataset</span><span class="p">(</span><span class="n">root_dir</span><span class="o">=</span><span class="n">test_folder</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">test_transform</span><span class="p">,</span>
+                                        <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)</span>
+        <span class="n">gradcam_dataset</span> <span class="o">=</span> <span class="n">PneumoniaDataset</span><span class="p">(</span><span class="n">root_dir</span><span class="o">=</span><span class="n">test_folder</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">test_transform</span><span class="p">,</span>
+                                           <span class="n">resolution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)</span>
+
+        <span class="c1"># Wrap datasets with DataLoaders</span>
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">persistent_workers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">val_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">persistent_workers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">test_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                 <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">persistent_workers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">gradcam_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">gradcam_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">persistent_workers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">gradcam_loader</span>  <span class="c1"># Return all loaders</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.forward">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.training_step">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.training_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes a single training step for the model.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            batch (tuple): A batch of data containing inputs, labels, and optional metadata.</span>
+<span class="sd">            batch_idx (int): Index of the current batch.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Loss value for the current training step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>  <span class="c1"># Unpack the batch into input data, labels, and metadata.</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Data device: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">, Label device: </span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">, Model device: </span><span class="si">{</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">, Class weights device: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span><span class="o">.</span><span class="n">device</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="n">label</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># Move data and labels to the correct device (e.g., GPU).</span>
+
+        <span class="c1"># Forward pass: Run the input data through the model to get predictions.</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Compute the loss using a weighted or unweighted CrossEntropyLoss, depending on class weights.</span>
+        <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span>
+            <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>  <span class="c1"># Calculate the loss between predictions and true labels.</span>
+
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Get predicted class indices by selecting the max logit for each sample.</span>
+
+        <span class="c1"># Update metrics based on predictions and true labels.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+        <span class="c1"># Log the loss for the current step. `prog_bar=True` shows it in the progress bar.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;train_loss_step&#39;</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_step</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span>  <span class="c1"># Return the computed loss for backpropagation.</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.on_fit_start">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.on_fit_start">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_fit_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepares the class weights and moves them to the correct device at the start of training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># Move class weights to the appropriate device (e.g., GPU).</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.validation_step">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.validation_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validation_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes a single validation step for the model.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            batch (tuple): A batch of validation data containing inputs, labels, and optional metadata.</span>
+<span class="sd">            batch_idx (int): Index of the current batch.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Validation loss for the current step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">val_data</span><span class="p">,</span> <span class="n">val_label</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>  <span class="c1"># Unpack the batch into input data, labels, and metadata.</span>
+
+        <span class="c1"># Forward pass: Run the validation data through the model.</span>
+        <span class="n">val_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">val_data</span><span class="p">)</span>
+
+        <span class="c1"># Compute validation loss using CrossEntropyLoss.</span>
+        <span class="n">val_loss</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()(</span><span class="n">val_output</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+
+        <span class="n">val_preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">val_output</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Get predicted class indices for validation data.</span>
+
+        <span class="c1"># Update metrics for validation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_preds</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_preds</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_preds</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_preds</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_preds</span><span class="p">,</span> <span class="n">val_label</span><span class="p">)</span>
+
+        <span class="c1"># Log the validation loss for the current step.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">)</span>
+
+        <span class="c1"># Compute intermediate values for metrics (optional).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">val_loss</span>  <span class="c1"># Return the validation loss.</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.on_train_epoch_end">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.on_train_epoch_end">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles actions at the end of each training epoch.</span>
+<span class="sd">        Gradually unfreezes layers if `gradually_unfreeze` is enabled in the configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gradually_unfreeze</span><span class="p">:</span>  <span class="c1"># Check if gradual unfreezing is enabled.</span>
+            <span class="c1"># Unfreeze layers every `unfreeze_interval` epochs.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">unfreeze_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">unfreeze_next_layers</span><span class="p">(</span><span class="n">num_layers_to_unfreeze</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_layers_to_unfreeze</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.test_step">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.test_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes a single test step for the model.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            batch (tuple): A batch of test data containing inputs, labels, and optional metadata.</span>
+<span class="sd">            batch_idx (int): Index of the current batch.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Test loss for the current step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">test_data</span><span class="p">,</span> <span class="n">test_label</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>  <span class="c1"># Unpack the batch into input data, labels, and metadata.</span>
+
+        <span class="c1"># Forward pass: Run the test data through the model.</span>
+        <span class="n">test_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+
+        <span class="c1"># Compute the test loss using CrossEntropyLoss.</span>
+        <span class="n">test_loss</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()(</span><span class="n">test_output</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+
+        <span class="n">test_preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">test_output</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Get predicted class indices for the test data.</span>
+
+        <span class="c1"># Update metrics for testing.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_preds</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_preds</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_preds</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_preds</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">test_preds</span><span class="p">,</span> <span class="n">test_label</span><span class="p">)</span>
+
+        <span class="c1"># Compute intermediate values for metrics (optional).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">test_loss</span>  <span class="c1"># Return the test loss.</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.on_test_epoch_end">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.on_test_epoch_end">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_test_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logs the final metrics at the end of the test epoch and resets all metric states.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute the final values for each metric.</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">specificity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="c1"># Log the metrics for the entire test epoch.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;test_acc_epoch&#39;</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;test_precision_epoch&#39;</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;test_recall_epoch&#39;</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;test_f1_epoch&#39;</span><span class="p">,</span> <span class="n">f1</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;test_specificity_epoch&#39;</span><span class="p">,</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Reset all metrics to clear their states for the next epoch.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.on_validation_epoch_end">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.on_validation_epoch_end">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_validation_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logs the final metrics at the end of the validation epoch and resets all metric states.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute the final values for each validation metric.</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">specificity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="c1"># Log the metrics for the entire validation epoch.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_acc_epoch&#39;</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_precision_epoch&#39;</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_recall_epoch&#39;</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_f1_epoch&#39;</span><span class="p">,</span> <span class="n">f1</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;val_specificity_epoch&#39;</span><span class="p">,</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">prog_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">on_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Reset all metrics to clear their states for the next epoch.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recall</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f1</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specificity</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.configure_optimizers">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.configure_optimizers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configures the optimizer and learning rate scheduler for training.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dictionary containing the optimizer and learning rate scheduler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Initialize optimizer based on the configuration.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimizer_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;adam&#39;</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span>
+                                         <span class="n">weight_decay</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">weight_decay</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimizer_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;sgd&#39;</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span>
+                                        <span class="n">weight_decay</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">weight_decay</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported optimizer: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimizer_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If gradual unfreezing is enabled, assign different learning rates for frozen and unfrozen layers.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gradually_unfreeze</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">([</span>
+                <span class="p">{</span><span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">frozen_lr</span><span class="p">},</span>
+                <span class="p">{</span><span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">unfrozen_lr</span><span class="p">}</span>
+            <span class="p">],</span> <span class="n">weight_decay</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">weight_decay</span><span class="p">)</span>
+
+        <span class="c1"># Define a learning rate scheduler to reduce the learning rate based on validation loss.</span>
+        <span class="n">scheduler</span> <span class="o">=</span> <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="n">optimizer</span><span class="p">,</span> <span class="s1">&#39;lr_scheduler&#39;</span><span class="p">:</span> <span class="n">scheduler</span><span class="p">,</span> <span class="s1">&#39;monitor&#39;</span><span class="p">:</span> <span class="s1">&#39;val_loss&#39;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.train_model">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.train_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains the model using the provided training and validation data loaders.</span>
+
+<span class="sd">        This function calls the trainer&#39;s `fit` method to begin model training.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_loader</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PneumoniaClassifier.test_model">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.PneumoniaClassifier.test_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests the model using the provided test data loader and a checkpoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            checkpoint_path (str): Path to the saved model checkpoint.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Metadata from the checkpoint containing additional test information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_loader</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">return</span> <span class="n">metadata</span></div>
+</div>
+
+
+
+<span class="c1">######################################################</span>
+<span class="c1">######################################################</span>
+<div class="viewcode-block" id="CNNPneumoniaClassifier">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CNNPneumoniaClassifier</span><span class="p">(</span><span class="n">PneumoniaClassifier</span><span class="p">):</span>
+<div class="viewcode-block" id="CNNPneumoniaClassifier.__init__">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the CNN-based PneumoniaClassifier with the specified configuration.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            config (object): Configuration object containing model and training parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="c1"># Initialize the backbone model from torchvision using the specified architecture name in the config.</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">)(</span><span class="n">weights</span><span class="o">=</span><span class="s1">&#39;DEFAULT&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Determine the number of output filters in the backbone&#39;s last layer based on its architecture type.</span>
+        <span class="k">if</span> <span class="s1">&#39;efficientnet&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">:</span>
+            <span class="n">num_filters</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">classifier</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">in_features</span>
+        <span class="k">elif</span> <span class="s1">&#39;densenet&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">:</span>
+            <span class="n">num_filters</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">in_features</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_filters</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">fc</span><span class="o">.</span><span class="n">in_features</span>
+
+        <span class="c1"># Extract all layers from the backbone except the final classification head.</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">backbone</span><span class="o">.</span><span class="n">children</span><span class="p">())[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">)</span>  <span class="c1"># Define feature extractor as a sequential model.</span>
+
+        <span class="c1"># Freeze all layers initially to prevent them from being trained unless explicitly unfrozen.</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Define a dropout layer for regularization.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">dropout</span><span class="p">)</span>
+
+        <span class="c1"># Define the final classification layer with two output classes (e.g., Normal and Pneumonia).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">num_filters</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Special case for DenseNet: Adjust the input size of the classifier to match DenseNet&#39;s flattened feature map.</span>
+        <span class="k">if</span> <span class="s1">&#39;dense&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">50176</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># If transfer learning is enabled, ensure that the feature extractor remains frozen.</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transfer_learning</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="CNNPneumoniaClassifier.create_transforms">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier.create_transforms">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates data augmentation and preprocessing transforms for training, validation, and testing datasets.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing transforms for training, validation, and testing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">train_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>  <span class="c1"># Pad the image to make it square.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>  <span class="c1"># Resize to target resolution.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">RandomRotation</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>  <span class="c1"># Apply small random rotations for augmentation.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>  <span class="c1"># Convert the image to a PyTorch tensor.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">])</span>  <span class="c1"># Normalize the image using ImageNet stats.</span>
+        <span class="p">])</span>
+
+        <span class="n">val_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">])</span>
+        <span class="p">])</span>
+
+        <span class="n">test_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">])</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">train_transform</span><span class="p">,</span> <span class="n">val_transform</span><span class="p">,</span> <span class="n">test_transform</span></div>
+
+
+<div class="viewcode-block" id="CNNPneumoniaClassifier.forward">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the forward pass of the model.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x (torch.Tensor): Input tensor.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Logits from the classifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Extract features from the input image and flatten the feature map.</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Pass the features through the classifier to get logits.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">features</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CNNPneumoniaClassifier.unfreeze_next_layers">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier.unfreeze_next_layers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unfreeze_next_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_layers_to_unfreeze</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unfreezes the next set of layers in the feature extractor for training.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            num_layers_to_unfreeze (int): Number of layers to unfreeze in each step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the list of layers in the feature extractor.</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">children</span><span class="p">())</span>
+
+        <span class="c1"># Unfreeze the next `num_layers_to_unfreeze` layers in the list.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">currently_unfrozen</span><span class="p">,</span>
+            <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">currently_unfrozen</span> <span class="o">+</span> <span class="n">num_layers_to_unfreeze</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">))</span>
+        <span class="p">):</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Update the counter to track how many layers have been unfrozen.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">currently_unfrozen</span> <span class="o">+=</span> <span class="n">num_layers_to_unfreeze</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unfroze up to layer </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">currently_unfrozen</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CNNPneumoniaClassifier.visualize_gradcam">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.CNNPneumoniaClassifier.visualize_gradcam">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visualize_gradcam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">target_layer</span><span class="p">,</span> <span class="n">class_names</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Visualizes Grad-CAM for interpreting model predictions.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            num_samples (int): Number of random samples to visualize.</span>
+<span class="sd">            target_layer (int): Target layer index for Grad-CAM computation.</span>
+<span class="sd">            class_names (list): List of class names corresponding to the output labels.</span>
+<span class="sd">            threshold (float): Threshold for Grad-CAM heatmap values (default: 0.5).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Ensure the model is in evaluation mode.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="c1"># Retrieve the target layer from the feature extractor.</span>
+        <span class="k">if</span> <span class="s1">&#39;densenet&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">:</span>
+            <span class="n">target_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">denseblock4</span><span class="o">.</span><span class="n">denselayer16</span><span class="o">.</span><span class="n">conv2</span> <span class="c1"># Specific layer in denseblock4</span>
+        <span class="k">elif</span> <span class="s1">&#39;efficientnet&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">:</span>
+            <span class="n">target_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">8</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="p">[</span><span class="n">target_layer</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">target_layer</span> <span class="o">=</span> <span class="n">module</span>
+
+        <span class="c1"># Initialize Grad-CAM with the selected target layer.</span>
+        <span class="n">gradcam</span> <span class="o">=</span> <span class="n">GradCAM</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">target_layers</span><span class="o">=</span><span class="p">[</span><span class="n">target_layer</span><span class="p">],</span>
+            <span class="n">reshape_transform</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># Set to `vit_reshape_transform` for Vision Transformers.</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Sample random indices from the dataset for visualization.</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradcam_loader</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)),</span> <span class="n">num_samples</span><span class="p">)</span>
+
+        <span class="n">pneumonia_samples</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pneumonia_samples</span> <span class="o">&gt;=</span> <span class="n">num_samples</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="c1"># Load the sample image, label, and optional metadata.</span>
+            <span class="n">inputs</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">img_name</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="c1"># Only visualize pneumonia cases (label == 1)</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># Add a batch dimension and move to the correct device.</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+            <span class="c1"># Generate the Grad-CAM heatmap for the input image.</span>
+            <span class="n">grayscale_cam</span> <span class="o">=</span> <span class="n">gradcam</span><span class="p">(</span><span class="n">input_tensor</span><span class="o">=</span><span class="n">inputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">grayscale_cam</span> <span class="o">=</span> <span class="p">(</span><span class="n">grayscale_cam</span> <span class="o">-</span> <span class="n">grayscale_cam</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">grayscale_cam</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">grayscale_cam</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">grayscale_cam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">grayscale_cam</span><span class="p">)</span>
+
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">grayscale_cam</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">)</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+
+            <span class="n">image_np</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">image_np</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_np</span> <span class="o">-</span> <span class="n">image_np</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">image_np</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">image_np</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">image_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">image_np</span><span class="p">)</span>
+
+            <span class="n">overlay</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">image_np</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">overlay</span><span class="p">)</span>
+
+            <span class="c1"># Display the heatmap with the corresponding label and metadata.</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">heatmap</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class: </span><span class="si">{</span><span class="n">class_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">img_name</span><span class="si">}</span><span class="s2"> - (Threshold: </span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+            <span class="n">pneumonia_samples</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</div>
+
+
+
+
+<span class="c1">#######################################################</span>
+<span class="c1">###############           ViT     #####################</span>
+<span class="c1">#######################################################</span>
+<div class="viewcode-block" id="GradCamViT">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.GradCamViT">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GradCamViT</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements Grad-CAM (Gradient-weighted Class Activation Mapping) for Vision Transformers.</span>
+<span class="sd">    This class registers hooks to extract features and gradients for generating attention maps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="GradCamViT.__init__">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.GradCamViT.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">target_layer</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the Grad-CAM for a Vision Transformer model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (torch.nn.Module): The Vision Transformer model.</span>
+<span class="sd">            target_layer (torch.nn.Module): The specific layer from which to extract activations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[GradCamViT] Initializing GradCamViT&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_layer</span> <span class="o">=</span> <span class="n">target_layer</span>  <span class="c1"># Ensure target_layer is set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Registers forward and backward hooks to capture features and gradients.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Extract the first tensor if tuple</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">backward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grad_output</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">grad_output</span> <span class="o">=</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Extract tensor if tuple</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="o">=</span> <span class="n">grad_output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_layer</span><span class="o">.</span><span class="n">register_full_backward_hook</span><span class="p">(</span><span class="n">backward_hook</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GradCamViT.generate_cam">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.GradCamViT.generate_cam">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_cam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_tensor</span><span class="p">,</span> <span class="n">class_idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a Grad-CAM heatmap for a given image tensor and class index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image_tensor (torch.Tensor): The input image tensor.</span>
+<span class="sd">            class_idx (int): The class index for which the Grad-CAM is computed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: The computed Grad-CAM heatmap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image_tensor</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">image_tensor</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">retain_grad</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">output</span><span class="p">[:,</span> <span class="n">class_idx</span><span class="p">]</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">retain_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Gradients were not computed. Ensure the model and inputs are correct.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Extract dimensions and reshape feature maps for visualization</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">embed_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># Extract shape</span>
+        <span class="n">seq_len</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Exclude CLS token</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seq_len</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Compute square spatial shape</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Compute Grad-CAM weighted sum</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gradient</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cam</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">cam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Normalize heatmap</span>
+        <span class="n">cam_min</span><span class="p">,</span> <span class="n">cam_max</span> <span class="o">=</span> <span class="n">cam</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">cam</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cam_max</span> <span class="o">-</span> <span class="n">cam_min</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cam</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cam</span> <span class="o">=</span> <span class="p">(</span><span class="n">cam</span> <span class="o">-</span> <span class="n">cam_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cam_max</span> <span class="o">-</span> <span class="n">cam_min</span><span class="p">)</span>
+
+        <span class="c1"># Resize the heatmap to match the input image dimensions</span>
+        <span class="n">cam</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">cam</span><span class="p">,</span> <span class="p">(</span><span class="n">image_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">image_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">cam</span></div>
+</div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ViTPneumoniaClassifier</span><span class="p">(</span><span class="n">PneumoniaClassifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vision Transformer (ViT) based pneumonia classifier.</span>
+<span class="sd">    This class extends the PneumoniaClassifier and adapts the Vision Transformer for image classification.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ViTPneumoniaClassifier.__init__">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the ViT-based pneumonia classifier.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (Config): Configuration object containing model parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span> <span class="o">=</span> <span class="n">ViTImageProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span> <span class="o">=</span> <span class="n">ViTForImageClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">backbone_name</span><span class="p">,</span> <span class="n">num_labels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ignore_mismatched_sizes</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vit_layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">vit</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">layer</span><span class="p">)</span>
+        <span class="c1"># Freeze the pre-trained layers if transfer learning is enabled</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">transfer_learning</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.forward">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward pass for the ViT pneumonia classifier</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x (torch.Tensor or PIL.Image): Input image tensor or PIL image</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Logits representing class predictions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">processed_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">processed_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="p">(</span><span class="n">images</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">,</span> <span class="n">do_rescale</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">&quot;pixel_values&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">vit_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">vit</span><span class="p">(</span><span class="n">pixel_values</span><span class="o">=</span><span class="n">processed_x</span><span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">vit_output</span><span class="o">.</span><span class="n">last_hidden_state</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logits</span></div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.get_vit_target_layer">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.get_vit_target_layer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vit_target_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the target Vision Transformer layer for Grad-CAM visualization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            layer_index (int, optional): Index of the target layer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.nn.Module: The specified layer&#39;s normalization component.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_extractor</span><span class="o">.</span><span class="n">vit</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">layer</span><span class="p">[</span><span class="n">layer_index</span><span class="p">]</span><span class="o">.</span><span class="n">layernorm_after</span></div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.visualize_gradcam">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.visualize_gradcam">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visualize_gradcam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_layer_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates and displays Grad-CAM visualizations for a given image or dataset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image_tensor (torch.Tensor, optional): Single image tensor for visualization. If None, dataset-based visualization is used.</span>
+<span class="sd">            num_samples (int, optional): Number of random samples to visualize from the dataset when `image_tensor` is None.</span>
+<span class="sd">            target_layer_index (int, optional): Index of the target layer for Grad-CAM computation.</span>
+<span class="sd">            class_names (list, optional): List of class names for labeling the visualizations.</span>
+<span class="sd">            threshold (float, optional): Threshold to filter Grad-CAM heatmap values, keeping only high-importance regions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">target_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vit_target_layer</span><span class="p">(</span><span class="n">layer_index</span><span class="o">=</span><span class="n">target_layer_index</span><span class="p">)</span>
+        <span class="n">gradcam</span> <span class="o">=</span> <span class="n">GradCamViT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_layer</span><span class="p">)</span>
+        <span class="n">class_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Normal&quot;</span><span class="p">,</span> <span class="s2">&quot;Pneumonia&quot;</span><span class="p">]</span>  <span class="c1"># Example class names.</span>
+
+        <span class="c1"># Use direct image input if provided</span>
+        <span class="k">if</span> <span class="n">image_tensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">image_tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">class_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">grayscale_cam</span> <span class="o">=</span> <span class="n">gradcam</span><span class="o">.</span><span class="n">generate_cam</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">class_idx</span><span class="p">)</span>
+            <span class="n">grayscale_cam</span><span class="p">[</span><span class="n">grayscale_cam</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">input_image</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">input_image</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_image</span> <span class="o">-</span> <span class="n">input_image</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">input_image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">input_image</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">grayscale_cam</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">)</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+            <span class="n">overlay</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">input_image</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">overlay</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Grad-CAM Visualization&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Handle dataset-based visualization if no image_tensor is provided</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;gradcam_loader&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Dataset-based visualization requires `gradcam_loader`. Use `model.set_dataloaders()` to set it.&quot;</span><span class="p">)</span>
+
+        <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradcam_loader</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)),</span> <span class="n">num_samples</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+            <span class="n">inputs</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">img_name</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">class_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">grayscale_cam</span> <span class="o">=</span> <span class="n">gradcam</span><span class="o">.</span><span class="n">generate_cam</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">class_idx</span><span class="p">)</span>
+            <span class="n">grayscale_cam</span><span class="p">[</span><span class="n">grayscale_cam</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">input_image</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">input_image</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_image</span> <span class="o">-</span> <span class="n">input_image</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">input_image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">input_image</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">applyColorMap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">grayscale_cam</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLORMAP_JET</span><span class="p">)</span>
+            <span class="n">heatmap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+            <span class="n">overlay</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">addWeighted</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">input_image</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">heatmap</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">overlay</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Class: </span><span class="si">{</span><span class="n">class_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">img_name</span><span class="si">}</span><span class="s2"> - (Threshold: </span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.create_transforms">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.create_transforms">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_transforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates data preprocessing and augmentation transforms for training, validation, and testing.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing train, validation, and test transforms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">train_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>  <span class="c1"># Pad the image to make it square.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>  <span class="c1"># Resize to target resolution.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">RandomRotation</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>  <span class="c1"># Apply small random rotations for augmentation.</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>  <span class="c1"># Convert the image to a PyTorch tensor.</span>
+        <span class="p">])</span>
+
+        <span class="n">val_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+        <span class="p">])</span>
+
+        <span class="n">test_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">make_square</span><span class="p">),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_res</span><span class="p">)),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">train_transform</span><span class="p">,</span> <span class="n">val_transform</span><span class="p">,</span> <span class="n">test_transform</span></div>
+
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.vit_reshape_transform">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.vit_reshape_transform">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vit_reshape_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reshapes the output tensor of the ViT model for Grad-CAM visualization.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            tensor (torch.Tensor): Input tensor from the ViT model.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Reshaped tensor with dimensions suitable for Grad-CAM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Extract the primary output tensor.</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] Invalid input to reshape_transform. Expected a tensor, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Assuming tensor shape [batch_size, seq_len, hidden_dim].</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="n">tensor</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="c1"># Adjust spatial dimensions.</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Convert to [batch_size, hidden_dim, height, width].</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.forward_hook">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.forward_hook">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hook to capture intermediate outputs from a specified module during forward pass.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            module (nn.Module): The module being hooked.</span>
+<span class="sd">            input (tuple): Input to the module.</span>
+<span class="sd">            output (torch.Tensor): Output from the module.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: The output of the module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+
+<div class="viewcode-block" id="ViTPneumoniaClassifier.preprocess_image">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.ViTPneumoniaClassifier.preprocess_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_image</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">224</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads and preprocesses an image for model inference.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            image_path (str): Path to the input image.</span>
+<span class="sd">            image_size (int, optional): Target image size. Default is 224.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: Preprocessed image tensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="n">image_size</span><span class="p">,</span> <span class="n">image_size</span><span class="p">)),</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()</span>
+        <span class="p">])</span>
+        <span class="n">image_tensor</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">image_tensor</span> <span class="o">=</span> <span class="n">image_tensor</span> <span class="o">/</span> <span class="n">image_tensor</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">image_tensor</span></div>
+</div>
+
+
+
+
+<div class="viewcode-block" id="Config">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.Config">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for defining model hyperparameters and settings.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        backbone_name (str): Name of the backbone model.</span>
+<span class="sd">        transfer_learning (bool): Whether to use transfer learning.</span>
+<span class="sd">        learning_rate (float): Learning rate for training.</span>
+<span class="sd">        batch_size (int): Number of samples per batch.</span>
+<span class="sd">        max_epochs (int): Maximum number of epochs for training.</span>
+<span class="sd">        weight_decay (float): Regularization parameter for optimizer.</span>
+<span class="sd">        dropout (float): Dropout rate for regularization.</span>
+<span class="sd">        num_workers (int): Number of workers for data loading.</span>
+<span class="sd">        model_name (str): Name of the model.</span>
+<span class="sd">        version (str): Model version.</span>
+<span class="sd">        optimizer_name (str): Name of the optimizer.</span>
+<span class="sd">        use_class_weights (bool): Whether to use class weights.</span>
+<span class="sd">        image_res (int): Resolution of input images.</span>
+<span class="sd">        patience (int): Patience for early stopping.</span>
+<span class="sd">        image_type (str): Type of image input (e.g., &#39;RGB&#39;).</span>
+<span class="sd">        frozen_lr (float, optional): Learning rate for frozen layers (if applicable).</span>
+<span class="sd">        unfrozen_lr (float, optional): Learning rate for unfrozen layers (if applicable).</span>
+<span class="sd">        unfreeze_interval (int, optional): Interval at which layers are unfrozen.</span>
+<span class="sd">        num_layers_to_unfreeze (int, optional): Number of layers to gradually unfreeze.</span>
+<span class="sd">        gradually_unfreeze (bool): Whether to gradually unfreeze layers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Config.__init__">
+<a class="viewcode-back" href="../../code.classifier.html#code.classifier.Config.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">backbone_name</span><span class="p">,</span>
+            <span class="n">transfer_learning</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_epochs</span><span class="p">,</span>
+            <span class="n">weight_decay</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="p">,</span>
+            <span class="n">version</span><span class="p">,</span>
+            <span class="n">optimizer_name</span><span class="p">,</span>
+            <span class="n">use_class_weights</span><span class="p">,</span>
+            <span class="n">image_res</span><span class="p">,</span>
+            <span class="n">patience</span><span class="p">,</span>
+            <span class="n">image_type</span><span class="p">,</span>
+            <span class="n">frozen_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">unfrozen_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">unfreeze_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">num_layers_to_unfreeze</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">gradually_unfreeze</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backbone_name</span> <span class="o">=</span> <span class="n">backbone_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transfer_learning</span> <span class="o">=</span> <span class="n">transfer_learning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="n">learning_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span> <span class="o">=</span> <span class="n">max_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_decay</span> <span class="o">=</span> <span class="n">weight_decay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_name</span> <span class="o">=</span> <span class="n">optimizer_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_class_weights</span> <span class="o">=</span> <span class="n">use_class_weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_res</span> <span class="o">=</span> <span class="n">image_res</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patience</span> <span class="o">=</span> <span class="n">patience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_type</span> <span class="o">=</span> <span class="n">image_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frozen_lr</span> <span class="o">=</span> <span class="n">frozen_lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfrozen_lr</span> <span class="o">=</span> <span class="n">unfrozen_lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unfreeze_interval</span> <span class="o">=</span> <span class="n">unfreeze_interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_layers_to_unfreeze</span> <span class="o">=</span> <span class="n">num_layers_to_unfreeze</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradually_unfreeze</span> <span class="o">=</span> <span class="n">gradually_unfreeze</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexander Szabados.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

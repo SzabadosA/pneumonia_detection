@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equalizing Medical Images &mdash; Pneumonia Detection 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Lung Mask Segmentation" href="lung_masks.html" />
+    <link rel="prev" title="Inspecting Dataset for Pneumonia Classification" href="inspect_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Pneumonia Detection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code.classifier.html">code.classifier module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.plot_random_image.html">code.plot_random_image module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Jupyter Notebooks:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">Preprocessing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="inspect_data.html">Inspecting Dataset for Pneumonia Classification</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Equalizing Medical Images</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import-libraries">Import Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defining-the-equalization-function">Defining the Equalization Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#processing-the-dataset">Processing the Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#saving-and-organizing-output">Saving and Organizing Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-output">Example Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lung_masks.html">Lung Mask Segmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="premultiplied_images.html">Premultiplied Images Processing</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Training_Structure.html">Training Structure</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pneumonia Detection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="preprocessing.html">Preprocessing</a></li>
+      <li class="breadcrumb-item active">Equalizing Medical Images</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/equalize_images.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="equalizing-medical-images">
+<h1>Equalizing Medical Images<a class="headerlink" href="#equalizing-medical-images" title="Link to this heading"></a></h1>
+<p>This notebook <strong>applies histogram equalization</strong> to <strong>medical X-ray images</strong>, enhancing contrast for better visibility. Histogram equalization is particularly useful for <strong>medical imaging</strong>, where subtle variations in brightness can be diagnostically significant.</p>
+<p><strong>Objectives:</strong>
+- Load medical images from the dataset.
+- Apply <strong>histogram equalization</strong> to enhance contrast.
+- Save the equalized images in a structured directory.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This notebook is part of the <strong>Pneumonia Detection Pipeline</strong>.</p>
+</div>
+<hr class="docutils" />
+<section id="import-libraries">
+<h2>Import Libraries<a class="headerlink" href="#import-libraries" title="Link to this heading"></a></h2>
+<p>This section loads necessary dependencies for <strong>image processing and file handling</strong>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ipython</span>
+<span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="n">run_line_magic</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="s2">&quot;inline&quot;</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageOps</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="defining-the-equalization-function">
+<h2>Defining the Equalization Function<a class="headerlink" href="#defining-the-equalization-function" title="Link to this heading"></a></h2>
+<p>The function <strong>iterates through the dataset</strong>, applies <strong>histogram equalization</strong>, and saves the <strong>enhanced images</strong>.</p>
+<p><strong>Processing Steps:</strong>
+1. <strong>Load original image</strong> – Convert to <strong>RGB</strong>.
+2. <strong>Apply histogram equalization</strong> – Using <cite>ImageOps.equalize()</cite>.
+3. <strong>Save enhanced image</strong> – Store it in an organized directory.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">equalize_image</span><span class="p">(</span><span class="n">input_folder</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">):</span>
+    <span class="c1"># Ensure the output folder exists</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">input_folder</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="c1"># Check for image files</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;.jpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;.png&quot;</span><span class="p">)):</span>
+                <span class="n">input_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+                <span class="c1"># Create the corresponding output path</span>
+                <span class="n">relative_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">input_folder</span><span class="p">)</span>
+                <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="c1"># Load the image</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Apply histogram equalization</span>
+                <span class="n">equalized_image</span> <span class="o">=</span> <span class="n">ImageOps</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+                <span class="c1"># Save the equalized image</span>
+                <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+                <span class="n">equalized_image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed: </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="processing-the-dataset">
+<h2>Processing the Dataset<a class="headerlink" href="#processing-the-dataset" title="Link to this heading"></a></h2>
+<p>This section <strong>initializes directory paths</strong> and calls the <cite>equalize_image</cite> function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define input and output folders</span>
+<span class="n">input_folder</span> <span class="o">=</span> <span class="s2">&quot;../data/reordered&quot;</span>
+<span class="n">output_folder</span> <span class="o">=</span> <span class="s2">&quot;../data/equalized&quot;</span>
+
+<span class="c1"># Apply histogram equalization to all images</span>
+<span class="n">equalize_image</span><span class="p">(</span><span class="n">input_folder</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Expected Outcome:</strong>
+- The script <strong>iterates through all images</strong>.
+- Each image undergoes <strong>histogram equalization</strong>.
+- The <strong>final images are saved</strong> in an organized directory.</p>
+</section>
+<hr class="docutils" />
+<section id="saving-and-organizing-output">
+<h2>Saving and Organizing Output<a class="headerlink" href="#saving-and-organizing-output" title="Link to this heading"></a></h2>
+<p>The processed images are saved to ‘./data/equalized’, maintaining the <strong>original folder structure</strong>.</p>
+<p><strong>File Naming Conventions:</strong>
+- Images retain <strong>original filenames</strong>.
+- Output structure mirrors <strong>original dataset hierarchy</strong>.</p>
+</section>
+<hr class="docutils" />
+<section id="example-output">
+<h2>Example Output<a class="headerlink" href="#example-output" title="Link to this heading"></a></h2>
+<p>This visualization compares an <strong>original image</strong> with its <strong>equalized version</strong>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">visualize_equalization</span><span class="p">(</span><span class="n">image_path</span><span class="p">):</span>
+    <span class="n">original</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+    <span class="n">equalized</span> <span class="o">=</span> <span class="n">ImageOps</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Original Image&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">equalized</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Equalized Image&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The <strong>equalized images</strong> provide <strong>improved contrast</strong>, aiding visualization.</p></li>
+<li><p>The processed images are <strong>stored efficiently</strong> for further use in segmentation models.</p></li>
+<li><p>This <strong>preprocessing step</strong> enhances the quality of images used in training models.</p></li>
+</ul>
+<hr class="docutils" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="inspect_data.html" class="btn btn-neutral float-left" title="Inspecting Dataset for Pneumonia Classification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lung_masks.html" class="btn btn-neutral float-right" title="Lung Mask Segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexander Szabados.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

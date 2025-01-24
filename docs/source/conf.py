@@ -24,6 +24,13 @@ print("@@PYTHONPATH")
 for r in sys.path:
     print(r)
 
+# Try importing a module from 'code' to check if it's discoverable
+try:
+    import code.classifier
+    print("Module 'code.classifier' imported successfully")
+except ModuleNotFoundError as e:
+    print("Module import error:", e)
+
 project = 'Pneumonia Detection'
 copyright = '2025, Alexander Szabados'
 author = 'Alexander Szabados'

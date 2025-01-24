@@ -12,7 +12,7 @@ import sys
 print("Current Working Directory:", os.getcwd())
 print("Available Files:", os.listdir(os.getcwd()))
 directory_path = '/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest'
-
+sys.path.append("/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest/code")
 # List all files in the directory
 for root, dirs, files in os.walk(directory_path):
     for filename in files:

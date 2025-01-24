@@ -9,9 +9,6 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
-  environment:
-    PYTHONPATH: "/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest"
-
 
 python:
   install:

@@ -5,6 +5,11 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import os
+import sys
+
+# Ensure Sphinx can find your code
+sys.path.insert(0, os.path.abspath("../../../pneumonia_detection"))  # Adjust this if needed
 
 project = 'Pneumonia Detection'
 copyright = '2025, Alexander Szabados'

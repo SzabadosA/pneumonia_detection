@@ -8,12 +8,12 @@
 import os
 import sys
 import subprocess
-install_script = os.path.abspath("../../install.py")
-if os.path.exists(install_script):
-    print(f"Running installation script: {install_script}")
-    subprocess.run(["python", install_script], check=True)
-else:
-    print("install.py not found, skipping installation.")
+#install_script = os.path.abspath("../../install.py")
+#if os.path.exists(install_script):
+#    print(f"Running installation script: {install_script}")
+#    subprocess.run(["python", install_script], check=True)
+#else:
+#    print("install.py not found, skipping installation.")
 
 # Add the project root directory to sys.path
 sys.path.insert(0, os.path.abspath("../.."))  # Adjust path if needed

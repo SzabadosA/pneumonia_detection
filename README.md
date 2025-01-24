@@ -9,6 +9,11 @@ The ultimate goal is to build a robust and adaptable classifier written with Pyt
 
 ![Prediction Results](misc/plotresults.PNG)
 
+### Technical Documentation
+The full technical Documentation can be found at:
+```
+https://szabadosa.github.io/pneumonia_detection/
+```
 ### Gradio Interface for User-Friendly Inference
 A **Gradio** web interface has been built to provide a simple and interactive way to use the pneumonia detection model. Users can upload their chest X-ray images and receive predictions with confidence scores. The interface also includes **Grad-CAM visualizations**, offering insights into the areas of the image that influenced the model’s decision. This tool makes AI-driven pneumonia detection more accessible for researchers and healthcare professionals.
 

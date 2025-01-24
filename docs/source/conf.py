@@ -7,27 +7,24 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
 import sys
+import subprocess
+install_script = os.path.abspath("../../install.py")
+if os.path.exists(install_script):
+    print(f"Running installation script: {install_script}")
+    subprocess.run(["python", install_script], check=True)
+else:
+    print("install.py not found, skipping installation.")
 
-# Debugging: Print path to check in logs
-print("Current Working Directory:", os.getcwd())
-print("Available Files:", os.listdir(os.getcwd()))
-directory_path = '/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest'
-sys.path.insert(0, "/home/docs/checkouts/readthedocs.org/user_builds/pneumonia-detection/checkouts/latest")
-# List all files in the directory
-for root, dirs, files in os.walk(directory_path):
-    for filename in files:
-        file_path = os.path.join(root, filename)
-        if os.path.isfile(file_path):
-            print(file_path)
+# Add the project root directory to sys.path
+sys.path.insert(0, os.path.abspath("../.."))  # Adjust path if needed
 
-print("@@PYTHONPATH")
-for r in sys.path:
-    print(r)
+# Debugging
+print("Updated PYTHONPATH:", sys.path)
 
-# Try importing a module from 'code' to check if it's discoverable
+# Check if 'code' is importable
 try:
     import code.classifier
-    print("Module 'code.classifier' imported successfully")
+    print("Module 'code.classifier' imported successfully!")
 except ModuleNotFoundError as e:
     print("Module import error:", e)
 

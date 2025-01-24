@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>code.plot_random_image module &mdash; pneumonia_detection 1.0.0 documentation</title>
+  <title>code.plot_random_image module &mdash; Pneumonia Detection 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -16,10 +16,11 @@
       <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="code.project_globals module" href="code.project_globals.html" />
+    <link rel="next" title="code.classify_random_images module" href="code.classify_random_images.html" />
     <link rel="prev" title="code.organize_dataset module" href="code.organize_dataset.html" /> 
 </head>
 
@@ -32,7 +33,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            pneumonia_detection
+            Pneumonia Detection
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -42,25 +43,29 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="code.html">code package</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="code.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="code.classifier.html">code.classifier module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">code.plot_random_image module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#code.plot_random_image.plot_random_image_from_loader"><code class="docutils literal notranslate"><span class="pre">plot_random_image_from_loader()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.classifier.html">code.classifier module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">code.plot_random_image module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code.plot_random_image.plot_random_image_from_loader"><code class="docutils literal notranslate"><span class="pre">plot_random_image_from_loader()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
 </ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="code.html#module-code">Module contents</a></li>
+<p class="caption" role="heading"><span class="caption-text">Jupyter Notebooks:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 </ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Training_Structure.html">Training Structure</a></li>
 </ul>
 
         </div>
@@ -69,7 +74,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">pneumonia_detection</a>
+          <a href="index.html">Pneumonia Detection</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -77,7 +82,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="code.html">code package</a></li>
       <li class="breadcrumb-item active">code.plot_random_image module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/code.plot_random_image.rst.txt" rel="nofollow"> View page source</a>
@@ -112,7 +116,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="code.organize_dataset.html" class="btn btn-neutral float-left" title="code.organize_dataset module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="code.project_globals.html" class="btn btn-neutral float-right" title="code.project_globals module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="code.classify_random_images.html" class="btn btn-neutral float-right" title="code.classify_random_images module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,0 +1,849 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lung Mask Segmentation &mdash; Pneumonia Detection 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Premultiplied Images Processing" href="premultiplied_images.html" />
+    <link rel="prev" title="Equalizing Medical Images" href="equalize_images.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Pneumonia Detection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code.classifier.html">code.classifier module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.plot_random_image.html">code.plot_random_image module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Jupyter Notebooks:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">Preprocessing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="inspect_data.html">Inspecting Dataset for Pneumonia Classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="equalize_images.html">Equalizing Medical Images</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lung Mask Segmentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import-libraries">Import Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataset-preparation">Dataset Preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#unet-model-architecture">UNet Model Architecture</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#training-process">Training Process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-segmentation-results">Visualizing Segmentation Results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="premultiplied_images.html">Premultiplied Images Processing</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Training_Structure.html">Training Structure</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Pneumonia Detection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="preprocessing.html">Preprocessing</a></li>
+      <li class="breadcrumb-item active">Lung Mask Segmentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lung_masks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lung-mask-segmentation">
+<h1>Lung Mask Segmentation<a class="headerlink" href="#lung-mask-segmentation" title="Link to this heading"></a></h1>
+<p>This notebook demonstrates the <strong>deep learning-based approach for lung segmentation</strong> using a <strong>UNet model</strong>. The segmentation model is trained on medical images with <strong>binary lung masks</strong>, leveraging <cite>torchvision</cite>, <cite>PIL</cite>, and <cite>torch</cite>.</p>
+<p><strong>Objectives:</strong>
+- Load and preprocess lung segmentation dataset.
+- Implement a <strong>UNet</strong> model for medical image segmentation.
+- Train the model with <strong>Binary Cross-Entropy loss</strong>.
+- Visualize predictions on sample images.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This notebook is part of the Pneumonia Detection pipeline.</p>
+</div>
+<hr class="docutils" />
+<section id="import-libraries">
+<h2>Import Libraries<a class="headerlink" href="#import-libraries" title="Link to this heading"></a></h2>
+<p>This section loads necessary libraries for <strong>deep learning, image processing, and dataset handling</strong>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="dataset-preparation">
+<h2>Dataset Preparation<a class="headerlink" href="#dataset-preparation" title="Link to this heading"></a></h2>
+<p>This dataset consists of <strong>lung X-ray images</strong> with <strong>manually annotated segmentation masks</strong> stored in a JSON file (‘.data/masked/annotated/annotations.json’).</p>
+<p><strong>Dataset format:</strong>
+- JSON file contains <strong>polygon coordinates</strong> outlining lung regions.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;IM-0007-0001.jpeg408508&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0007-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">408508</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">217</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">361</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">523</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">795</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">954</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1160</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1345</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1562</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1728</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1830</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1830</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1862</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1806</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">217</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">153</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">183</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">219</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">712</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">325</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">206</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">151</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">206</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">210</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">170</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">227</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">472</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">844</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1186</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1585</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1815</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1811</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1486</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">984</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">708</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0010-0001.jpeg299115&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0010-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">299115</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">273</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">347</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">461</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">605</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">736</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">886</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1083</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1199</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1317</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1507</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1621</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1705</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">228</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">238</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">271</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">696</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">470</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">247</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">133</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">112</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">171</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">145</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">138</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">195</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">506</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">866</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1469</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1470</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1083</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">691</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0022-0001.jpeg82987&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0022-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">82987</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">176</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">191</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">225</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">272</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">320</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">383</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">444</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">552</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">619</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">690</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">736</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">889</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">994</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1117</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1178</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1206</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">175</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">609</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">424</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">304</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">198</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">98</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">29</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">6</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">6</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">18</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">8</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">3</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">105</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">290</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">457</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">615</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">615</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">340</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">330</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">476</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">501</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0023-0001.jpeg306362&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0023-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">306362</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">384</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">486</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">612</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">720</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">847</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1122</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1253</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1433</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1627</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1747</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1787</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1807</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">272</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">290</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">322</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">380</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">602</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">367</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">185</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">94</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">92</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">131</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">74</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">110</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">361</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">677</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">970</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1381</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1381</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1070</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">847</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">596</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0049-0001.jpeg173441&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0049-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">173441</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">272</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">310</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">371</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">459</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">693</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">818</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1001</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1105</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1350</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1453</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1489</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1489</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">263</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">273</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">681</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">517</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">383</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">264</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">94</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">120</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">113</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">125</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">322</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">544</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">837</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1056</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1055</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">676</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0065-0001.jpeg122201&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0065-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">122201</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">192</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">180</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">184</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">228</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">315</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">460</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">662</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">760</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">946</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1124</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1291</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1342</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1337</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">191</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">1015</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">893</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">744</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">467</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">269</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">128</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">111</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">142</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">109</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">183</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">414</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">946</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1017</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1015</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0075-0001.jpeg157190&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0075-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">157190</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">290</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">417</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">526</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">596</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">764</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">861</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">975</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1120</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1250</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1421</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1531</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1586</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">235</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">241</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">286</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">488</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">239</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">94</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">42</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">41</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">80</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">54</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">39</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">104</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">315</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">608</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1063</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1062</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">747</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">486</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0086-0001.jpeg231577&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0086-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">231577</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">171</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">238</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">290</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">359</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">453</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">724</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">960</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1123</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1254</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1500</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1678</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1763</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1861</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1888</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">128</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">164</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">1121</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">830</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">574</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">390</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">239</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">73</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">96</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">109</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">68</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">120</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">246</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">424</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">892</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1456</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1452</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1116</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0095-0001.jpeg176391&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0095-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">176391</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">264</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">301</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">423</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">578</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">715</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">828</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">926</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1018</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1162</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1368</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1535</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1615</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1641</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1654</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">225</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">233</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">265</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">725</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">561</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">362</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">187</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">135</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">133</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">150</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">106</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">106</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">319</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">554</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">834</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1075</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1303</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1308</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1069</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">724</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;IM-0145-0001.jpeg505771&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;filename&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;IM-0145-0001.jpeg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;size&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">505771</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;regions&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="s2">&quot;shape_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;polyline&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s2">&quot;all_points_x&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">239</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">281</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">376</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">509</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">638</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">737</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">871</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">958</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1083</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1252</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1376</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1451</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1512</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">166</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">210</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">241</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="s2">&quot;all_points_y&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="mf">647</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">538</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">365</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">214</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">185</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">211</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">197</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">145</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">177</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">376</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">607</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">835</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1152</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">1152</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">753</span><span class="p">,</span>
+<span class="w">            </span><span class="mf">641</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">&quot;region_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="s2">&quot;class_labels&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;lungs\n&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="s2">&quot;file_attributes&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Each image is mapped to a corresponding mask.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">LungSegmentationDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_folder</span><span class="p">,</span> <span class="n">json_path</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_size</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_folder</span> <span class="o">=</span> <span class="n">image_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_size</span> <span class="o">=</span> <span class="n">target_size</span>
+
+        <span class="c1"># Load JSON annotations</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_files</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="c1"># Load image and corresponding annotation</span>
+        <span class="n">image_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_files</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+        <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_folder</span><span class="p">,</span> <span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">])</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create binary mask</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">image_info</span><span class="p">[</span><span class="s2">&quot;regions&quot;</span><span class="p">]:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="s2">&quot;shape_attributes&quot;</span><span class="p">][</span><span class="s2">&quot;all_points_x&quot;</span><span class="p">],</span>
+                              <span class="n">region</span><span class="p">[</span><span class="s2">&quot;shape_attributes&quot;</span><span class="p">][</span><span class="s2">&quot;all_points_y&quot;</span><span class="p">]))</span>
+            <span class="n">draw</span><span class="o">.</span><span class="n">polygon</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">outline</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Resize image and mask</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_size</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">BILINEAR</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_size</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">NEAREST</span><span class="p">)</span>
+
+        <span class="c1"># Apply transformations</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Add channel dimension</span>
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="unet-model-architecture">
+<h2>UNet Model Architecture<a class="headerlink" href="#unet-model-architecture" title="Link to this heading"></a></h2>
+<p>This model is a <strong>fully convolutional neural network</strong> designed for segmentation tasks. It consists of:
+- <strong>Encoder (Downsampling Path):</strong> Captures contextual information.
+- <strong>Bottleneck Layer:</strong> Connects encoder and decoder.
+- <strong>Decoder (Upsampling Path):</strong> Restores spatial resolution for segmentation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">UNet</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">UNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">conv_block</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">out_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">enc1</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enc2</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enc3</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enc4</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleneck</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">up4</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dec4</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dec3</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dec2</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dec1</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">final</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">enc1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">enc2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">enc1</span><span class="p">))</span>
+        <span class="n">enc3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc3</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">enc2</span><span class="p">))</span>
+        <span class="n">enc4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enc4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">enc3</span><span class="p">))</span>
+
+        <span class="n">bottleneck</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleneck</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">(</span><span class="n">enc4</span><span class="p">))</span>
+
+        <span class="n">up4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up4</span><span class="p">(</span><span class="n">bottleneck</span><span class="p">)</span>
+        <span class="n">dec4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec4</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">up4</span><span class="p">,</span> <span class="n">enc4</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">up3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up3</span><span class="p">(</span><span class="n">dec4</span><span class="p">)</span>
+        <span class="n">dec3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec3</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">up3</span><span class="p">,</span> <span class="n">enc3</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">up2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up2</span><span class="p">(</span><span class="n">dec3</span><span class="p">)</span>
+        <span class="n">dec2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">up2</span><span class="p">,</span> <span class="n">enc2</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">up1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up1</span><span class="p">(</span><span class="n">dec2</span><span class="p">)</span>
+        <span class="n">dec1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">up1</span><span class="p">,</span> <span class="n">enc1</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final</span><span class="p">(</span><span class="n">dec1</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="training-process">
+<h2>Training Process<a class="headerlink" href="#training-process" title="Link to this heading"></a></h2>
+<p>The model is trained using <strong>Binary Cross-Entropy loss</strong> for 200 epochs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="n">epoch_loss</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">masks</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+        <span class="n">images</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">masks</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">masks</span><span class="p">)</span>
+
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="n">epoch_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/200, Loss: </span><span class="si">{</span><span class="n">epoch_loss</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="visualizing-segmentation-results">
+<h2>Visualizing Segmentation Results<a class="headerlink" href="#visualizing-segmentation-results" title="Link to this heading"></a></h2>
+<p>The predictions are <strong>superimposed</strong> on the original images.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">visualize_prediction</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask_pred</span><span class="p">):</span>
+    <span class="n">mask_pred</span> <span class="o">=</span> <span class="n">mask_pred</span> <span class="o">/</span> <span class="n">mask_pred</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">image_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>  <span class="c1"># Normalize to [0, 1]</span>
+    <span class="n">premultiplied_image</span> <span class="o">=</span> <span class="n">image_np</span> <span class="o">*</span> <span class="n">mask_pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image_np</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Original Image&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">premultiplied_image</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Masked Image (Predicted Lung)&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="equalize_images.html" class="btn btn-neutral float-left" title="Equalizing Medical Images" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="premultiplied_images.html" class="btn btn-neutral float-right" title="Premultiplied Images Processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexander Szabados.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

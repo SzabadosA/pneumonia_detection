@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'pneumonia_detection'
+project = 'Pneumonia Detection'
 copyright = '2025, Alexander Szabados'
 author = 'Alexander Szabados'
 release = '1.0.0'
@@ -20,16 +20,27 @@ templates_path = ['_templates']
 extensions = [
     'sphinx.ext.autodoc',  # Auto-generate documentation from docstrings
     'sphinx.ext.napoleon',  # Support Google & NumPy-style docstrings
-    'sphinx.ext.viewcode',  # Add links to source code
+    'sphinx.ext.viewcode',
+    'nbsphinx'# Add links to source code
 ]
-
+exclude_patterns = ['_build', '**.ipynb_checkpoints']
 autodoc_default_options = {
     "members": True,  # Include all members (functions & classes)
     "undoc-members": True,  # Include members without docstrings
     "show-inheritance": True,  # Show class inheritance
     "special-members": "__init__",  # Ensure __init__ docstrings appear
 }
+nbsphinx_allow_errors = True  # Allows notebooks to be included even if errors occur
+nbsphinx_toctree_depth = 1  # Ensures only the first level (title) appears in index
+nbsphinx_execute = "never"  # Prevents execution of notebooks every time
+nbsphinx_prolog = """
+.. raw:: html
 
+    <style>
+        .nbinput, .nboutput { display: block; }
+        .nboutput .output_area { max-height: 500px; overflow-y: auto; }
+    </style>
+"""
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 

@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>code package &mdash; pneumonia_detection 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="code.classifier module" href="code.classifier.html" />
+    <link rel="prev" title="pneumonia_detection documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pneumonia_detection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">code package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html">code.classifier module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.plot_random_image.html">code.plot_random_image module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-code">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pneumonia_detection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">code package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/code.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="code-package">
+<h1>code package<a class="headerlink" href="#code-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code.classifier.html">code.classifier module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier.create_transforms"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier.create_transforms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier.forward"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier.unfreeze_next_layers"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier.unfreeze_next_layers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.CNNPneumoniaClassifier.visualize_gradcam"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier.visualize_gradcam()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.backbone_name"><code class="docutils literal notranslate"><span class="pre">Config.backbone_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.transfer_learning"><code class="docutils literal notranslate"><span class="pre">Config.transfer_learning</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.learning_rate"><code class="docutils literal notranslate"><span class="pre">Config.learning_rate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.batch_size"><code class="docutils literal notranslate"><span class="pre">Config.batch_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.max_epochs"><code class="docutils literal notranslate"><span class="pre">Config.max_epochs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.weight_decay"><code class="docutils literal notranslate"><span class="pre">Config.weight_decay</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.dropout"><code class="docutils literal notranslate"><span class="pre">Config.dropout</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.num_workers"><code class="docutils literal notranslate"><span class="pre">Config.num_workers</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.model_name"><code class="docutils literal notranslate"><span class="pre">Config.model_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.version"><code class="docutils literal notranslate"><span class="pre">Config.version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.optimizer_name"><code class="docutils literal notranslate"><span class="pre">Config.optimizer_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.use_class_weights"><code class="docutils literal notranslate"><span class="pre">Config.use_class_weights</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.image_res"><code class="docutils literal notranslate"><span class="pre">Config.image_res</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.patience"><code class="docutils literal notranslate"><span class="pre">Config.patience</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.image_type"><code class="docutils literal notranslate"><span class="pre">Config.image_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.frozen_lr"><code class="docutils literal notranslate"><span class="pre">Config.frozen_lr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.unfrozen_lr"><code class="docutils literal notranslate"><span class="pre">Config.unfrozen_lr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.unfreeze_interval"><code class="docutils literal notranslate"><span class="pre">Config.unfreeze_interval</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.num_layers_to_unfreeze"><code class="docutils literal notranslate"><span class="pre">Config.num_layers_to_unfreeze</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.gradually_unfreeze"><code class="docutils literal notranslate"><span class="pre">Config.gradually_unfreeze</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.Config.__init__"><code class="docutils literal notranslate"><span class="pre">Config.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.GradCamViT"><code class="docutils literal notranslate"><span class="pre">GradCamViT</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.GradCamViT.__init__"><code class="docutils literal notranslate"><span class="pre">GradCamViT.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.GradCamViT.generate_cam"><code class="docutils literal notranslate"><span class="pre">GradCamViT.generate_cam()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.__init__()</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.config"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.accuracy"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.accuracy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.precision"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.precision</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.recall"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.recall</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.f1"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.f1</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.specificity"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.specificity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.currently_unfrozen"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.currently_unfrozen</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.train_loader"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.train_loader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.val_loader"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.val_loader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.test_loader"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.test_loader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.gradcam_loader"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.gradcam_loader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.class_weights"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.class_weights</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.checkpoint_callback"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.checkpoint_callback</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.early_stopping_callback"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.early_stopping_callback</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.trainer"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.trainer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.compute_class_weights"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.compute_class_weights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.configure_optimizers"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.configure_optimizers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.create_dataloaders"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.create_dataloaders()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.create_transforms"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.create_transforms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.forward"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.get_vit_target_layer"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.get_vit_target_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.identity_transform"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.identity_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.load_from_checkpoint"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.load_from_checkpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.on_fit_start"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.on_fit_start()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.on_test_epoch_end"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.on_test_epoch_end()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.on_train_epoch_end"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.on_train_epoch_end()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.on_validation_epoch_end"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.on_validation_epoch_end()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.save_checkpoint"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.save_checkpoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.test_model"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.test_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.test_step"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.test_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.train_model"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.train_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.training_step"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.training_step()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.unfreeze_next_layers"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.unfreeze_next_layers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.PneumoniaClassifier.validation_step"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier.validation_step()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.create_transforms"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.create_transforms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.forward"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.forward()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.forward_hook"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.forward_hook()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.get_vit_target_layer"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.get_vit_target_layer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.preprocess_image"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.preprocess_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.visualize_gradcam"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.visualize_gradcam()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.classifier.html#code.classifier.ViTPneumoniaClassifier.vit_reshape_transform"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier.vit_reshape_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.classifier.html#code.classifier.make_square"><code class="docutils literal notranslate"><span class="pre">make_square()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.classify_random_images.html#code.classify_random_images.plot_random_images_with_labels"><code class="docutils literal notranslate"><span class="pre">plot_random_images_with_labels()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.custom_checkpoint.html#code.custom_checkpoint.CustomModelCheckpoint"><code class="docutils literal notranslate"><span class="pre">CustomModelCheckpoint</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.custom_checkpoint.html#code.custom_checkpoint.CustomModelCheckpoint.__init__"><code class="docutils literal notranslate"><span class="pre">CustomModelCheckpoint.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.custom_checkpoint.html#code.custom_checkpoint.CustomModelCheckpoint.on_save_checkpoint"><code class="docutils literal notranslate"><span class="pre">CustomModelCheckpoint.on_save_checkpoint()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.dataloader.html#code.dataloader.PneumoniaDataset"><code class="docutils literal notranslate"><span class="pre">PneumoniaDataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="code.dataloader.html#code.dataloader.PneumoniaDataset.__init__"><code class="docutils literal notranslate"><span class="pre">PneumoniaDataset.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.organize_dataset.html#code.organize_dataset.reorganize_all_files"><code class="docutils literal notranslate"><span class="pre">reorganize_all_files()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.plot_random_image.html">code.plot_random_image module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="code.plot_random_image.html#code.plot_random_image.plot_random_image_from_loader"><code class="docutils literal notranslate"><span class="pre">plot_random_image_from_loader()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+</ul>
+</div>
+</section>
+<section id="module-code">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-code" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="pneumonia_detection documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="code.classifier.html" class="btn btn-neutral float-right" title="code.classifier module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexander Szabados.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

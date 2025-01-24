@@ -1,0 +1,1004 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>code.classifier module &mdash; pneumonia_detection 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="code.classify_random_images module" href="code.classify_random_images.html" />
+    <link rel="prev" title="code package" href="code.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pneumonia_detection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">code package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="code.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">code.classifier module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.CNNPneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">CNNPneumoniaClassifier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.GradCamViT"><code class="docutils literal notranslate"><span class="pre">GradCamViT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.PneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">PneumoniaClassifier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.ViTPneumoniaClassifier"><code class="docutils literal notranslate"><span class="pre">ViTPneumoniaClassifier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#code.classifier.make_square"><code class="docutils literal notranslate"><span class="pre">make_square()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="code.classify_random_images.html">code.classify_random_images module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.custom_checkpoint.html">code.custom_checkpoint module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.dataloader.html">code.dataloader module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.organize_dataset.html">code.organize_dataset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.plot_random_image.html">code.plot_random_image module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="code.project_globals.html">code.project_globals module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="code.html#module-code">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pneumonia_detection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">code package</a></li>
+      <li class="breadcrumb-item active">code.classifier module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/code.classifier.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-code.classifier">
+<span id="code-classifier-module"></span><h1>code.classifier module<a class="headerlink" href="#module-code.classifier" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">CNNPneumoniaClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#code.classifier.PneumoniaClassifier" title="code.classifier.PneumoniaClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PneumoniaClassifier</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the CNN-based PneumoniaClassifier with the specified configuration.
+:param config: Configuration object containing model and training parameters.
+:type config: object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier.create_transforms">
+<span class="sig-name descname"><span class="pre">create_transforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier.create_transforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier.create_transforms" title="Link to this definition"></a></dt>
+<dd><p>Creates data augmentation and preprocessing transforms for training, validation, and testing datasets.
+:returns: A tuple containing transforms for training, validation, and testing.
+:rtype: tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the forward pass of the model.
+:param x: Input tensor.
+:type x: torch.Tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logits from the classifier.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier.unfreeze_next_layers">
+<span class="sig-name descname"><span class="pre">unfreeze_next_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_layers_to_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier.unfreeze_next_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier.unfreeze_next_layers" title="Link to this definition"></a></dt>
+<dd><p>Unfreezes the next set of layers in the feature extractor for training.
+:param num_layers_to_unfreeze: Number of layers to unfreeze in each step.
+:type num_layers_to_unfreeze: int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.CNNPneumoniaClassifier.visualize_gradcam">
+<span class="sig-name descname"><span class="pre">visualize_gradcam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#CNNPneumoniaClassifier.visualize_gradcam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.CNNPneumoniaClassifier.visualize_gradcam" title="Link to this definition"></a></dt>
+<dd><p>Visualizes Grad-CAM for interpreting model predictions.
+:param num_samples: Number of random samples to visualize.
+:type num_samples: int
+:param target_layer: Target layer index for Grad-CAM computation.
+:type target_layer: int
+:param class_names: List of class names corresponding to the output labels.
+:type class_names: list
+:param threshold: Threshold for Grad-CAM heatmap values (default: 0.5).
+:type threshold: float</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="code.classifier.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_learning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_class_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unfrozen_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unfreeze_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_layers_to_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradually_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration class for defining model hyperparameters and settings.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.backbone_name">
+<span class="sig-name descname"><span class="pre">backbone_name</span></span><a class="headerlink" href="#code.classifier.Config.backbone_name" title="Link to this definition"></a></dt>
+<dd><p>Name of the backbone model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.transfer_learning">
+<span class="sig-name descname"><span class="pre">transfer_learning</span></span><a class="headerlink" href="#code.classifier.Config.transfer_learning" title="Link to this definition"></a></dt>
+<dd><p>Whether to use transfer learning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#code.classifier.Config.learning_rate" title="Link to this definition"></a></dt>
+<dd><p>Learning rate for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#code.classifier.Config.batch_size" title="Link to this definition"></a></dt>
+<dd><p>Number of samples per batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.max_epochs">
+<span class="sig-name descname"><span class="pre">max_epochs</span></span><a class="headerlink" href="#code.classifier.Config.max_epochs" title="Link to this definition"></a></dt>
+<dd><p>Maximum number of epochs for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.weight_decay">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><a class="headerlink" href="#code.classifier.Config.weight_decay" title="Link to this definition"></a></dt>
+<dd><p>Regularization parameter for optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.dropout">
+<span class="sig-name descname"><span class="pre">dropout</span></span><a class="headerlink" href="#code.classifier.Config.dropout" title="Link to this definition"></a></dt>
+<dd><p>Dropout rate for regularization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.num_workers">
+<span class="sig-name descname"><span class="pre">num_workers</span></span><a class="headerlink" href="#code.classifier.Config.num_workers" title="Link to this definition"></a></dt>
+<dd><p>Number of workers for data loading.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.model_name">
+<span class="sig-name descname"><span class="pre">model_name</span></span><a class="headerlink" href="#code.classifier.Config.model_name" title="Link to this definition"></a></dt>
+<dd><p>Name of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.version">
+<span class="sig-name descname"><span class="pre">version</span></span><a class="headerlink" href="#code.classifier.Config.version" title="Link to this definition"></a></dt>
+<dd><p>Model version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.optimizer_name">
+<span class="sig-name descname"><span class="pre">optimizer_name</span></span><a class="headerlink" href="#code.classifier.Config.optimizer_name" title="Link to this definition"></a></dt>
+<dd><p>Name of the optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.use_class_weights">
+<span class="sig-name descname"><span class="pre">use_class_weights</span></span><a class="headerlink" href="#code.classifier.Config.use_class_weights" title="Link to this definition"></a></dt>
+<dd><p>Whether to use class weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.image_res">
+<span class="sig-name descname"><span class="pre">image_res</span></span><a class="headerlink" href="#code.classifier.Config.image_res" title="Link to this definition"></a></dt>
+<dd><p>Resolution of input images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.patience">
+<span class="sig-name descname"><span class="pre">patience</span></span><a class="headerlink" href="#code.classifier.Config.patience" title="Link to this definition"></a></dt>
+<dd><p>Patience for early stopping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.image_type">
+<span class="sig-name descname"><span class="pre">image_type</span></span><a class="headerlink" href="#code.classifier.Config.image_type" title="Link to this definition"></a></dt>
+<dd><p>Type of image input (e.g., ‘RGB’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.frozen_lr">
+<span class="sig-name descname"><span class="pre">frozen_lr</span></span><a class="headerlink" href="#code.classifier.Config.frozen_lr" title="Link to this definition"></a></dt>
+<dd><p>Learning rate for frozen layers (if applicable).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.unfrozen_lr">
+<span class="sig-name descname"><span class="pre">unfrozen_lr</span></span><a class="headerlink" href="#code.classifier.Config.unfrozen_lr" title="Link to this definition"></a></dt>
+<dd><p>Learning rate for unfrozen layers (if applicable).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.unfreeze_interval">
+<span class="sig-name descname"><span class="pre">unfreeze_interval</span></span><a class="headerlink" href="#code.classifier.Config.unfreeze_interval" title="Link to this definition"></a></dt>
+<dd><p>Interval at which layers are unfrozen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.num_layers_to_unfreeze">
+<span class="sig-name descname"><span class="pre">num_layers_to_unfreeze</span></span><a class="headerlink" href="#code.classifier.Config.num_layers_to_unfreeze" title="Link to this definition"></a></dt>
+<dd><p>Number of layers to gradually unfreeze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.Config.gradually_unfreeze">
+<span class="sig-name descname"><span class="pre">gradually_unfreeze</span></span><a class="headerlink" href="#code.classifier.Config.gradually_unfreeze" title="Link to this definition"></a></dt>
+<dd><p>Whether to gradually unfreeze layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.Config.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_learning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_class_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unfrozen_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unfreeze_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_layers_to_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradually_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#Config.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.Config.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="code.classifier.GradCamViT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">GradCamViT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#GradCamViT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.GradCamViT" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements Grad-CAM (Gradient-weighted Class Activation Mapping) for Vision Transformers.
+This class registers hooks to extract features and gradients for generating attention maps.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.GradCamViT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#GradCamViT.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.GradCamViT.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the Grad-CAM for a Vision Transformer model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – The Vision Transformer model.</p></li>
+<li><p><strong>target_layer</strong> (<em>torch.nn.Module</em>) – The specific layer from which to extract activations.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.GradCamViT.generate_cam">
+<span class="sig-name descname"><span class="pre">generate_cam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#GradCamViT.generate_cam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.GradCamViT.generate_cam" title="Link to this definition"></a></dt>
+<dd><p>Generates a Grad-CAM heatmap for a given image tensor and class index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_tensor</strong> (<em>torch.Tensor</em>) – The input image tensor.</p></li>
+<li><p><strong>class_idx</strong> (<em>int</em>) – The class index for which the Grad-CAM is computed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed Grad-CAM heatmap.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">PneumoniaClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningModule</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.__init__" title="Link to this definition"></a></dt>
+<dd><p>A base classifier for pneumonia detection built using PyTorch Lightning.</p>
+<p>This class serves as a flexible framework to experiment with different deep learning architectures,
+including CNNs and Vision Transformers, for binary classification tasks. It integrates data loaders,
+training, evaluation, and model checkpointing functionalities. It also supports class weighting for
+imbalanced datasets and gradual unfreezing for transfer learning.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.config" title="Link to this definition"></a></dt>
+<dd><p>Configuration containing model hyperparameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.accuracy">
+<span class="sig-name descname"><span class="pre">accuracy</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.accuracy" title="Link to this definition"></a></dt>
+<dd><p>Binary classification accuracy metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torchmetrics.Metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.precision" title="Link to this definition"></a></dt>
+<dd><p>Binary classification precision metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torchmetrics.Metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.recall">
+<span class="sig-name descname"><span class="pre">recall</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.recall" title="Link to this definition"></a></dt>
+<dd><p>Binary classification recall metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torchmetrics.Metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.f1">
+<span class="sig-name descname"><span class="pre">f1</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.f1" title="Link to this definition"></a></dt>
+<dd><p>F1 score for binary classification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torchmetrics.Metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.specificity">
+<span class="sig-name descname"><span class="pre">specificity</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.specificity" title="Link to this definition"></a></dt>
+<dd><p>Specificity metric to measure true negative rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torchmetrics.Metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.currently_unfrozen">
+<span class="sig-name descname"><span class="pre">currently_unfrozen</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.currently_unfrozen" title="Link to this definition"></a></dt>
+<dd><p>Counter for layers unfrozen during gradual unfreezing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.train_loader">
+<span class="sig-name descname"><span class="pre">train_loader</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.train_loader" title="Link to this definition"></a></dt>
+<dd><p>DataLoader for training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.val_loader">
+<span class="sig-name descname"><span class="pre">val_loader</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.val_loader" title="Link to this definition"></a></dt>
+<dd><p>DataLoader for validation data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.test_loader">
+<span class="sig-name descname"><span class="pre">test_loader</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.test_loader" title="Link to this definition"></a></dt>
+<dd><p>DataLoader for testing data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.gradcam_loader">
+<span class="sig-name descname"><span class="pre">gradcam_loader</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.gradcam_loader" title="Link to this definition"></a></dt>
+<dd><p>DataLoader for Grad-CAM visualization data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.class_weights">
+<span class="sig-name descname"><span class="pre">class_weights</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.class_weights" title="Link to this definition"></a></dt>
+<dd><p>Tensor of class weights for handling imbalanced datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.checkpoint_callback">
+<span class="sig-name descname"><span class="pre">checkpoint_callback</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.checkpoint_callback" title="Link to this definition"></a></dt>
+<dd><p>Callback for saving the best model checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="code.custom_checkpoint.html#code.custom_checkpoint.CustomModelCheckpoint" title="code.custom_checkpoint.CustomModelCheckpoint">CustomModelCheckpoint</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.early_stopping_callback">
+<span class="sig-name descname"><span class="pre">early_stopping_callback</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.early_stopping_callback" title="Link to this definition"></a></dt>
+<dd><p>Callback to stop training when validation loss stops improving.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>EarlyStopping</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.trainer">
+<span class="sig-name descname"><span class="pre">trainer</span></span><a class="headerlink" href="#code.classifier.PneumoniaClassifier.trainer" title="Link to this definition"></a></dt>
+<dd><p>PyTorch Lightning Trainer instance for managing training and evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pl.Trainer</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.compute_class_weights">
+<span class="sig-name descname"><span class="pre">compute_class_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.compute_class_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.compute_class_weights" title="Link to this definition"></a></dt>
+<dd><p>Computes class weights to handle imbalanced datasets.
+:returns: Tensor of class weights.
+:rtype: torch.Tensor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.configure_optimizers">
+<span class="sig-name descname"><span class="pre">configure_optimizers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.configure_optimizers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.configure_optimizers" title="Link to this definition"></a></dt>
+<dd><p>Configures the optimizer and learning rate scheduler for training.
+:returns: A dictionary containing the optimizer and learning rate scheduler.
+:rtype: dict</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.create_dataloaders">
+<span class="sig-name descname"><span class="pre">create_dataloaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.create_dataloaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.create_dataloaders" title="Link to this definition"></a></dt>
+<dd><p>Creates data loaders for training, validation, and testing.
+:returns: DataLoader objects for train, validation, test, and Grad-CAM datasets.
+:rtype: tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.create_transforms">
+<span class="sig-name descname"><span class="pre">create_transforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.create_transforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.create_transforms" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.forward" title="Link to this definition"></a></dt>
+<dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Your model’s output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.get_vit_target_layer">
+<span class="sig-name descname"><span class="pre">get_vit_target_layer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.get_vit_target_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.get_vit_target_layer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.identity_transform">
+<span class="sig-name descname"><span class="pre">identity_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.identity_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.identity_transform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.load_from_checkpoint">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.load_from_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.load_from_checkpoint" title="Link to this definition"></a></dt>
+<dd><p>Loads a model from a saved checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checkpoint_path</strong> (<em>str</em>) – The file path to the saved checkpoint.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of the model loaded with the checkpoint state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>model (cls)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The checkpoint should contain:</dt><dd><ul class="simple">
+<li><p>‘config’: The configuration parameters for the model.</p></li>
+<li><p>‘state_dict’: The saved model parameters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.on_fit_start">
+<span class="sig-name descname"><span class="pre">on_fit_start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.on_fit_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.on_fit_start" title="Link to this definition"></a></dt>
+<dd><p>Prepares the class weights and moves them to the correct device at the start of training.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.on_test_epoch_end">
+<span class="sig-name descname"><span class="pre">on_test_epoch_end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.on_test_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.on_test_epoch_end" title="Link to this definition"></a></dt>
+<dd><p>Logs the final metrics at the end of the test epoch and resets all metric states.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.on_train_epoch_end">
+<span class="sig-name descname"><span class="pre">on_train_epoch_end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.on_train_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.on_train_epoch_end" title="Link to this definition"></a></dt>
+<dd><p>Handles actions at the end of each training epoch.
+Gradually unfreezes layers if <cite>gradually_unfreeze</cite> is enabled in the configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.on_validation_epoch_end">
+<span class="sig-name descname"><span class="pre">on_validation_epoch_end</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.on_validation_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.on_validation_epoch_end" title="Link to this definition"></a></dt>
+<dd><p>Logs the final metrics at the end of the validation epoch and resets all metric states.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.save_checkpoint">
+<span class="sig-name descname"><span class="pre">save_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.save_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.save_checkpoint" title="Link to this definition"></a></dt>
+<dd><p>Saves the model checkpoint to a specified file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checkpoint_path</strong> (<em>str</em>) – The file path where the checkpoint will be saved.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>The checkpoint includes:</dt><dd><ul class="simple">
+<li><p>Model state dictionary</p></li>
+<li><p>Configuration parameters</p></li>
+<li><p>Metadata (epoch number, training loss, validation loss)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.test_model">
+<span class="sig-name descname"><span class="pre">test_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.test_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.test_model" title="Link to this definition"></a></dt>
+<dd><p>Tests the model using the provided test data loader and a checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checkpoint_path</strong> (<em>str</em>) – Path to the saved model checkpoint.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Metadata from the checkpoint containing additional test information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.test_step">
+<span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.test_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.test_step" title="Link to this definition"></a></dt>
+<dd><p>Executes a single test step for the model.
+:param batch: A batch of test data containing inputs, labels, and optional metadata.
+:type batch: tuple
+:param batch_idx: Index of the current batch.
+:type batch_idx: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Test loss for the current step.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.train_model">
+<span class="sig-name descname"><span class="pre">train_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.train_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.train_model" title="Link to this definition"></a></dt>
+<dd><p>Trains the model using the provided training and validation data loaders.</p>
+<p>This function calls the trainer’s <cite>fit</cite> method to begin model training.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.training_step">
+<span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.training_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.training_step" title="Link to this definition"></a></dt>
+<dd><p>Executes a single training step for the model.
+:param batch: A batch of data containing inputs, labels, and optional metadata.
+:type batch: tuple
+:param batch_idx: Index of the current batch.
+:type batch_idx: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Loss value for the current training step.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.unfreeze_next_layers">
+<span class="sig-name descname"><span class="pre">unfreeze_next_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_layers_to_unfreeze</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.unfreeze_next_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.unfreeze_next_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.PneumoniaClassifier.validation_step">
+<span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#PneumoniaClassifier.validation_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.PneumoniaClassifier.validation_step" title="Link to this definition"></a></dt>
+<dd><p>Executes a single validation step for the model.
+:param batch: A batch of validation data containing inputs, labels, and optional metadata.
+:type batch: tuple
+:param batch_idx: Index of the current batch.
+:type batch_idx: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Validation loss for the current step.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">ViTPneumoniaClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#code.classifier.PneumoniaClassifier" title="code.classifier.PneumoniaClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PneumoniaClassifier</span></code></a></p>
+<p>Vision Transformer (ViT) based pneumonia classifier.
+This class extends the PneumoniaClassifier and adapts the Vision Transformer for image classification.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initializes the ViT-based pneumonia classifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#code.classifier.Config" title="code.classifier.Config"><em>Config</em></a>) – Configuration object containing model parameters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.create_transforms">
+<span class="sig-name descname"><span class="pre">create_transforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.create_transforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.create_transforms" title="Link to this definition"></a></dt>
+<dd><p>Creates data preprocessing and augmentation transforms for training, validation, and testing.
+:returns: A tuple containing train, validation, and test transforms.
+:rtype: tuple</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward pass for the ViT pneumonia classifier
+:param x: Input image tensor or PIL image
+:type x: torch.Tensor or PIL.Image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Logits representing class predictions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.forward_hook">
+<span class="sig-name descname"><span class="pre">forward_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.forward_hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.forward_hook" title="Link to this definition"></a></dt>
+<dd><p>Hook to capture intermediate outputs from a specified module during forward pass.
+:param module: The module being hooked.
+:type module: nn.Module
+:param input: Input to the module.
+:type input: tuple
+:param output: Output from the module.
+:type output: torch.Tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The output of the module.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.get_vit_target_layer">
+<span class="sig-name descname"><span class="pre">get_vit_target_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.get_vit_target_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.get_vit_target_layer" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the target Vision Transformer layer for Grad-CAM visualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>layer_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the target layer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The specified layer’s normalization component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.preprocess_image">
+<span class="sig-name descname"><span class="pre">preprocess_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">224</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.preprocess_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.preprocess_image" title="Link to this definition"></a></dt>
+<dd><p>Loads and preprocesses an image for model inference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_path</strong> (<em>str</em>) – Path to the input image.</p></li>
+<li><p><strong>image_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Target image size. Default is 224.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Preprocessed image tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.visualize_gradcam">
+<span class="sig-name descname"><span class="pre">visualize_gradcam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_layer_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.visualize_gradcam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.visualize_gradcam" title="Link to this definition"></a></dt>
+<dd><p>Generates and displays Grad-CAM visualizations for a given image or dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_tensor</strong> (<em>torch.Tensor</em><em>, </em><em>optional</em>) – Single image tensor for visualization. If None, dataset-based visualization is used.</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of random samples to visualize from the dataset when <cite>image_tensor</cite> is None.</p></li>
+<li><p><strong>target_layer_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the target layer for Grad-CAM computation.</p></li>
+<li><p><strong>class_names</strong> (<em>list</em><em>, </em><em>optional</em>) – List of class names for labeling the visualizations.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Threshold to filter Grad-CAM heatmap values, keeping only high-importance regions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="code.classifier.ViTPneumoniaClassifier.vit_reshape_transform">
+<span class="sig-name descname"><span class="pre">vit_reshape_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#ViTPneumoniaClassifier.vit_reshape_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.ViTPneumoniaClassifier.vit_reshape_transform" title="Link to this definition"></a></dt>
+<dd><p>Reshapes the output tensor of the ViT model for Grad-CAM visualization.
+:param tensor: Input tensor from the ViT model.
+:type tensor: torch.Tensor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Reshaped tensor with dimensions suitable for Grad-CAM.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="code.classifier.make_square">
+<span class="sig-prename descclassname"><span class="pre">code.classifier.</span></span><span class="sig-name descname"><span class="pre">make_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/code/classifier.html#make_square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#code.classifier.make_square" title="Link to this definition"></a></dt>
+<dd><p>Pads the image to make it square, preserving the original content.
+:param image: The input image to be processed.
+:type image: PIL.Image
+:param fill: The fill color for padding (default is black or 0).
+:type fill: int or tuple</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The padded square image.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>PIL.Image</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="code.html" class="btn btn-neutral float-left" title="code package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="code.classify_random_images.html" class="btn btn-neutral float-right" title="code.classify_random_images module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alexander Szabados.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

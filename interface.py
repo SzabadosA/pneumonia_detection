@@ -154,7 +154,7 @@ def predict(model_name, image):
     loaded_config = Config(**checkpoint["config"])
 
     # Load model based on type
-    if "Vit" in model_name:
+    if "vit" in model_name.lower():
         model = ViTPneumoniaClassifier(loaded_config)
         is_vit = True
     else:
